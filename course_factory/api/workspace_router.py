@@ -94,6 +94,10 @@ async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
             from course_factory.discovery import DiscoveryStage
 
             stage = DiscoveryStage()
+        elif stage_name == "research":
+            from course_factory.research import ResearchStage
+
+            stage = ResearchStage()
         else:
             _stage_status[key] = {
                 "status": "error",
@@ -115,6 +119,12 @@ async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
                 "ollama_url": settings.ollama_url,
             },
         }
+
+        if stage_name == "research":
+            def _progress(msg: str) -> None:
+                _stage_status[key] = {"status": "running", "message": msg}
+
+            context["_progress_cb"] = _progress
 
         _stage_status[key] = {"status": "running", "message": f"Executing {stage_name}..."}
         context = await stage.execute(context)

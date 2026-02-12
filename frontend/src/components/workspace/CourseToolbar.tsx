@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { StageStatus } from "../../types/workspace";
 import { cn } from "../../utils/cn";
 
@@ -11,6 +12,7 @@ interface CourseToolbarProps {
 const STAGES = [
   { key: "knowledge", label: "Ingest Sources" },
   { key: "discovery", label: "Generate Proposal" },
+  { key: "research", label: "Approve & Research" },
 ];
 
 export function CourseToolbar({
@@ -45,15 +47,19 @@ export function CourseToolbar({
         {title}
       </h2>
       <div className="flex items-center gap-2">
-        {STAGES.map((s) => {
+        {STAGES.map((s, i) => {
           const st = stageStatus(s.key);
           return (
-            <StageButton
-              key={s.key}
-              label={s.label}
-              status={st}
-              onClick={() => onRunStage(s.key)}
-            />
+            <Fragment key={s.key}>
+              {i === 2 && (
+                <span className="mx-1 h-4 w-px bg-surface-border" />
+              )}
+              <StageButton
+                label={s.label}
+                status={st}
+                onClick={() => onRunStage(s.key)}
+              />
+            </Fragment>
           );
         })}
       </div>
