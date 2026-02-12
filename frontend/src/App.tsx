@@ -70,12 +70,13 @@ export default function App() {
     );
   };
 
-  if (appState.view === "setup") {
-    return renderSetup();
-  }
-
   return (
-    <AppShell currentView={appState.view} onNavigate={navigate}>
+    <AppShell
+      currentView={appState.view}
+      hasActiveCourse={appState.activeCourseId !== null}
+      onNavigate={navigate}
+    >
+      {appState.view === "setup" && renderSetup()}
       {appState.view === "dashboard" && (
         <Dashboard onOpenCourse={openCourse} />
       )}

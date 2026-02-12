@@ -4,11 +4,12 @@ import { cn } from "../../utils/cn";
 
 interface AppShellProps {
   currentView: AppView;
+  hasActiveCourse: boolean;
   onNavigate: (view: AppView) => void;
   children: ReactNode;
 }
 
-export function AppShell({ currentView, onNavigate, children }: AppShellProps) {
+export function AppShell({ currentView, hasActiveCourse, onNavigate, children }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-surface-border px-6 py-3">
@@ -31,6 +32,14 @@ export function AppShell({ currentView, onNavigate, children }: AppShellProps) {
             >
               Courses
             </NavButton>
+            {hasActiveCourse && (
+              <NavButton
+                active={currentView === "workspace"}
+                onClick={() => onNavigate("workspace")}
+              >
+                Workspace
+              </NavButton>
+            )}
             <NavButton
               active={currentView === "setup"}
               onClick={() => onNavigate("setup")}
