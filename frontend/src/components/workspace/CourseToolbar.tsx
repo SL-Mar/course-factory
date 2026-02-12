@@ -20,6 +20,7 @@ const STAGES = [
   { key: "knowledge", label: "Ingest Sources" },
   { key: "discovery", label: "Generate Proposal" },
   { key: "research", label: "Approve & Research" },
+  { key: "synthesis", label: "Write Scripts" },
 ];
 
 export function CourseToolbar({

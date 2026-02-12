@@ -125,6 +125,10 @@ async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
             from course_factory.research import ResearchStage
 
             stage = ResearchStage()
+        elif stage_name == "synthesis":
+            from course_factory.synthesis import SynthesisStage
+
+            stage = SynthesisStage()
         else:
             _stage_status[key] = {
                 "status": "error",
@@ -152,7 +156,7 @@ async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
             },
         }
 
-        if stage_name == "research":
+        if stage_name in ("research", "synthesis"):
             def _progress(msg: str) -> None:
                 _stage_status[key] = {"status": "running", "message": msg}
 
