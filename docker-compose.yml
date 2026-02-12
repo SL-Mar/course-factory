@@ -1,0 +1,36 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: cf
+      POSTGRES_PASSWORD: cf
+      POSTGRES_DB: course_factory
+    volumes:
+      - cf_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cf -d course_factory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      CF_DB_URL: postgresql://cf:cf@timescaledb:5432/course_factory
+      CF_OLLAMA_URL: http://host.docker.internal:11434
+      CF_QDRANT_URL: http://host.docker.internal:6333
+      CF_REDIS_URL: redis://host.docker.internal:6379/2
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "-m", "uvicorn", "course_factory.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+volumes:
+  cf_pgdata:

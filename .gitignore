@@ -1,0 +1,42 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Database
+*.db
+
+# Keys
+keys/private.key
+
+# Type checking
+.mypy_cache/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Linting
+.ruff_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

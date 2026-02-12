@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "course-factory"
+version = "0.1.0"
+description = "Autonomous agentic system that transforms scattered technical knowledge into publishable Udemy courses"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "SL-MAR", email = "smr.laignel@gmail.com"}
+]
+keywords = ["course", "udemy", "ai", "llm", "automation", "education"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "typer[all]>=0.9.0",
+    "rich>=13.7.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
+    "cryptography>=41.0",
+    "pynacl>=1.5.0",
+    "sqlalchemy>=2.0",
+    "alembic>=1.12",
+    "fastapi>=0.104",
+    "uvicorn>=0.24",
+    "httpx>=0.25",
+    "aiohttp>=3.9",
+    "qdrant-client>=1.7",
+    "redis>=5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.23",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+docs = [
+    "mkdocs-material>=9.0",
+    "mkdocs>=1.5",
+]
+
+[project.scripts]
+cf = "course_factory.cli:app_main"
+
+[project.urls]
+Homepage = "https://github.com/SL-Mar/course-factory"
+Repository = "https://github.com/SL-Mar/course-factory"
+Issues = "https://github.com/SL-Mar/course-factory/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["course_factory*"]
+exclude = ["tests*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "S"]
+ignore = ["E501", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = ["-v", "--tb=short"]
+
+[tool.coverage.run]
+source = ["course_factory"]
+branch = true
+omit = ["*/tests/*"]
