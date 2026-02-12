@@ -21,6 +21,7 @@ const STAGES = [
   { key: "discovery", label: "Generate Proposal" },
   { key: "research", label: "Approve & Research" },
   { key: "synthesis", label: "Write Scripts" },
+  { key: "production", label: "Generate Slides" },
 ];
 
 export function CourseToolbar({

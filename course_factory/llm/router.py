@@ -20,6 +20,7 @@ TASK_MODELS: dict[str, tuple[str, str]] = {
     "script_writing": ("ollama", "qwen2.5:14b"),
     "code_generation": ("ollama", "qwen2.5-coder:14b"),
     "quiz_generation": ("ollama", "qwen2.5:14b"),
+    "slide_generation": ("ollama", "qwen2.5:14b"),
     "review": ("anthropic", "claude-sonnet-4-5-20250929"),
     "summarize": ("ollama", "qwen2.5:14b"),
     "research": ("anthropic", "claude-sonnet-4-5-20250929"),
