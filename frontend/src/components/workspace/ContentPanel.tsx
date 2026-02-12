@@ -1,5 +1,6 @@
 import { cn } from "../../utils/cn";
-import { isMarkdownFile } from "../../utils/fileType";
+import { isMarpFile, isMarkdownFile } from "../../utils/fileType";
+import { MarpViewer } from "./MarpViewer";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 interface ContentPanelProps {
@@ -85,6 +86,8 @@ export function ContentPanel({
             )}
             spellCheck={false}
           />
+        ) : selectedPath && isMarpFile(selectedPath) ? (
+          <MarpViewer content={content} />
         ) : selectedPath && isMarkdownFile(selectedPath) ? (
           <MarkdownViewer content={content} />
         ) : (
