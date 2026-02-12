@@ -1,4 +1,6 @@
 import { cn } from "../../utils/cn";
+import { isMarkdownFile } from "../../utils/fileType";
+import { MarkdownViewer } from "./MarkdownViewer";
 
 interface ContentPanelProps {
   selectedPath: string | null;
@@ -83,6 +85,8 @@ export function ContentPanel({
             )}
             spellCheck={false}
           />
+        ) : selectedPath && isMarkdownFile(selectedPath) ? (
+          <MarkdownViewer content={content} />
         ) : (
           <pre className="whitespace-pre-wrap font-mono text-sm text-gray-300 leading-relaxed">
             {content}
