@@ -35,6 +35,9 @@ export interface WizardState {
   qdrant_url: string;
   redis_url: string;
   telegram_webhook: string;
+  ollama_model: string;
+  cloud_provider: string;
+  cloud_model: string;
 }
 
 export interface LicenseInfo {
@@ -63,6 +66,9 @@ export interface CurrentConfig {
   anthropic_api_key_set: boolean;
   openai_api_key_set: boolean;
   telegram_webhook: string;
+  ollama_model: string;
+  cloud_provider: string;
+  cloud_model: string;
 }
 
 export interface SaveResult {

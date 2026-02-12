@@ -71,6 +71,7 @@ class DiscoveryStage(Stage):
 
     async def execute(self, context: dict) -> dict:
         from course_factory.llm.router import LLMRouter
+        from course_factory.llm.types import StageTokenSummary, save_token_usage
 
         workspace_dir = Path(context["workspace_dir"])
         knowledge_dir = workspace_dir / "01-knowledge"
@@ -92,19 +93,28 @@ class DiscoveryStage(Stage):
 
         combined_sources = "\n".join(source_summaries)
 
-        # Initialize LLM router
+        # Initialize LLM router with model overrides
         router = LLMRouter(settings={
             "ollama_base_url": settings.get("ollama_url", "http://localhost:11434"),
+            "ollama_model": settings.get("ollama_model", ""),
+            "cloud_provider": settings.get("cloud_provider", ""),
+            "cloud_model": settings.get("cloud_model", ""),
+            "anthropic_api_key": settings.get("anthropic_api_key", ""),
+            "openai_api_key": settings.get("openai_api_key", ""),
         })
+
+        token_summary = StageTokenSummary("discovery")
 
         # Step 1: Generate course proposal
         logger.info("Generating course proposal via LLM...")
-        proposal = await router.chat(
+        result = await router.chat(
             task="outline",
             messages=[
                 {"role": "user", "content": PROPOSAL_PROMPT.format(sources=combined_sources)}
             ],
         )
+        token_summary.add_call(result)
+        proposal = result.text
 
         proposal_path = discovery_dir / "course-proposal.md"
         proposal_path.write_text(proposal, encoding="utf-8")
@@ -112,20 +122,24 @@ class DiscoveryStage(Stage):
 
         # Step 2: Extract structured outline
         logger.info("Extracting structured outline via LLM...")
-        outline_raw = await router.chat(
+        result = await router.chat(
             task="outline",
             messages=[
                 {"role": "user", "content": OUTLINE_PROMPT.format(proposal=proposal)}
             ],
         )
+        token_summary.add_call(result)
 
         # Try to parse JSON from the response
-        outline_json = _extract_json(outline_raw)
+        outline_json = _extract_json(result.text)
         outline_path = discovery_dir / "outline.json"
         outline_path.write_text(
             json.dumps(outline_json, indent=2), encoding="utf-8"
         )
         logger.info("Saved structured outline")
+
+        save_token_usage(workspace_dir, "discovery", token_summary)
+        context["_tokens_discovery"] = token_summary.to_dict()
 
         await router.unload_all()
 

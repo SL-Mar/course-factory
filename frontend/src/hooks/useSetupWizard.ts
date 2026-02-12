@@ -14,6 +14,9 @@ const initialState: WizardState = {
   qdrant_url: "http://localhost:6333",
   redis_url: "redis://localhost:6379/2",
   telegram_webhook: "http://localhost:5678/webhook/send-telegram",
+  ollama_model: "qwen2.5:14b",
+  cloud_provider: "anthropic",
+  cloud_model: "claude-sonnet-4-5-20250929",
 };
 
 function reducer(state: WizardState, action: WizardAction): WizardState {
@@ -34,6 +37,9 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
         qdrant_url: c.qdrant_url || state.qdrant_url,
         redis_url: c.redis_url || state.redis_url,
         telegram_webhook: c.telegram_webhook || state.telegram_webhook,
+        ollama_model: c.ollama_model || state.ollama_model,
+        cloud_provider: c.cloud_provider || state.cloud_provider,
+        cloud_model: c.cloud_model || state.cloud_model,
       };
     }
     default:

@@ -71,6 +71,7 @@ class ResearchStage(Stage):
 
     async def execute(self, context: dict) -> dict:
         from course_factory.llm.router import LLMRouter
+        from course_factory.llm.types import StageTokenSummary, save_token_usage
 
         workspace_dir = Path(context["workspace_dir"])
         outline_path = workspace_dir / "02-discovery" / "outline.json"
@@ -98,10 +99,17 @@ class ResearchStage(Stage):
                 source_summaries.append(f"--- {md_file.stem} ---\n{content}\n")
         combined_sources = "\n".join(source_summaries) if source_summaries else "(no source materials available)"
 
-        # Initialize LLM router
+        # Initialize LLM router with model overrides
         router = LLMRouter(settings={
             "ollama_base_url": settings.get("ollama_url", "http://localhost:11434"),
+            "ollama_model": settings.get("ollama_model", ""),
+            "cloud_provider": settings.get("cloud_provider", ""),
+            "cloud_model": settings.get("cloud_model", ""),
+            "anthropic_api_key": settings.get("anthropic_api_key", ""),
+            "openai_api_key": settings.get("openai_api_key", ""),
         })
+
+        token_summary = StageTokenSummary("research")
 
         # Build research plan manifest
         research_plan: dict = {
@@ -140,17 +148,18 @@ class ResearchStage(Stage):
                 lesson_title="{lesson_title}",
             )
 
-            research_text = await router.chat(
+            result = await router.chat(
                 task="outline",
                 messages=[{"role": "user", "content": prompt}],
             )
+            token_summary.add_call(result)
 
             # Save module research file
             slug = _slugify(mod_title)
             filename = f"module-{mod_num:02d}-{slug}.md"
             out_path = research_dir / filename
-            out_path.write_text(research_text, encoding="utf-8")
-            logger.info("Saved research: %s (%d chars)", filename, len(research_text))
+            out_path.write_text(result.text, encoding="utf-8")
+            logger.info("Saved research: %s (%d chars)", filename, len(result.text))
 
             research_plan["modules"].append({
                 "number": mod_num,
@@ -164,6 +173,9 @@ class ResearchStage(Stage):
         plan_path = research_dir / "_research-plan.json"
         plan_path.write_text(json.dumps(research_plan, indent=2), encoding="utf-8")
         logger.info("Saved research plan manifest")
+
+        save_token_usage(workspace_dir, "research", token_summary)
+        context["_tokens_research"] = token_summary.to_dict()
 
         await router.unload_all()
 

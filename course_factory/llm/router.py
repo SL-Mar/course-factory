@@ -9,6 +9,7 @@ from course_factory.llm.providers import (
     OllamaProvider,
     OpenAIProvider,
 )
+from course_factory.llm.types import ChatResult
 
 logger = logging.getLogger(__name__)
 
@@ -49,18 +50,38 @@ class LLMRouter:
         return default
 
     def _resolve_task(self, task: str) -> tuple[str, str]:
-        """Resolve a task name to a (provider_name, model_name) tuple."""
-        if task in TASK_MODELS:
-            return TASK_MODELS[task]
-        logger.warning(
-            "Unknown task '%s', falling back to 'outline' defaults", task
-        )
-        return TASK_MODELS["outline"]
+        """Resolve a task name to a (provider_name, model_name) tuple.
+
+        Applies user overrides from settings:
+        - Ollama tasks use ``ollama_model`` if set.
+        - Cloud tasks use ``cloud_provider`` + ``cloud_model`` if set.
+        """
+        if task not in TASK_MODELS:
+            logger.warning(
+                "Unknown task '%s', falling back to 'outline' defaults", task
+            )
+        default_provider, default_model = TASK_MODELS.get(task, TASK_MODELS["outline"])
+
+        if default_provider == "ollama":
+            override_model = self._get_setting("ollama_model", "")
+            if override_model:
+                return ("ollama", override_model)
+            return (default_provider, default_model)
+
+        # Cloud task — allow provider + model override
+        override_provider = self._get_setting("cloud_provider", "")
+        override_model = self._get_setting("cloud_model", "")
+        provider = override_provider if override_provider else default_provider
+        model = override_model if override_model else default_model
+        return (provider, model)
 
     def _create_provider(self, provider_name: str, model: str) -> LLMProvider:
         """Instantiate a new provider for the given provider name and model."""
         if provider_name == "ollama":
-            base_url = self._get_setting("ollama_base_url", "http://localhost:11434")
+            base_url = self._get_setting(
+                "ollama_base_url",
+                self._get_setting("ollama_url", "http://localhost:11434"),
+            )
             timeout = self._get_setting("ollama_timeout", 600)
             return OllamaProvider(model=model, base_url=base_url, timeout=timeout)
 
@@ -127,7 +148,7 @@ class LLMRouter:
         task: str,
         messages: list[dict[str, str]],
         **kwargs: Any,
-    ) -> str:
+    ) -> ChatResult:
         """Route a chat request to the appropriate provider for the task.
 
         Args:
@@ -137,7 +158,7 @@ class LLMRouter:
                       (e.g. temperature, max_tokens).
 
         Returns:
-            The LLM response text.
+            A ChatResult containing the response text and token usage.
         """
         provider = await self.get_provider(task)
         logger.info(

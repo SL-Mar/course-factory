@@ -1,12 +1,19 @@
 import { Fragment } from "react";
-import type { StageStatus } from "../../types/workspace";
+import type { CourseTokens, StageStatus } from "../../types/workspace";
 import { cn } from "../../utils/cn";
+
+function formatTokenCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
 
 interface CourseToolbarProps {
   title: string;
   onBack: () => void;
   onRunStage: (stage: string) => void;
   stageStatus: (stage: string) => StageStatus;
+  tokenData: CourseTokens | null;
 }
 
 const STAGES = [
@@ -20,7 +27,10 @@ export function CourseToolbar({
   onBack,
   onRunStage,
   stageStatus,
+  tokenData,
 }: CourseToolbarProps) {
+  const totalTokens = tokenData?.total?.total_tokens ?? 0;
+  const totalCost = tokenData?.total?.estimated_cost_usd ?? 0;
   return (
     <div className="flex items-center gap-3 border-b border-surface-border px-4 py-2">
       <button
@@ -63,6 +73,16 @@ export function CourseToolbar({
           );
         })}
       </div>
+      {totalTokens > 0 && (
+        <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0 ml-2">
+          <span>{formatTokenCount(totalTokens)} tokens</span>
+          {totalCost > 0 && (
+            <span className="text-amber-400">
+              ${totalCost.toFixed(4)}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

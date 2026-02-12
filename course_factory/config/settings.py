@@ -57,6 +57,20 @@ class Settings(BaseSettings):
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
     openai_api_key: str = Field(default="", description="OpenAI API key")
 
+    # ── Model selection ─────────────────────────────────────────────────
+    ollama_model: str = Field(
+        default="qwen2.5:14b",
+        description="Ollama model for local tasks",
+    )
+    cloud_provider: str = Field(
+        default="anthropic",
+        description="Cloud LLM provider (anthropic or openai)",
+    )
+    cloud_model: str = Field(
+        default="claude-sonnet-4-5-20250929",
+        description="Cloud model identifier",
+    )
+
     # ── integrations ──────────────────────────────────────────────────
     notion_api_key: str = Field(default="", description="Notion integration token")
     github_token: str = Field(default="", description="GitHub personal access token")

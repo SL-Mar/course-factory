@@ -49,6 +49,9 @@ async def get_current_config() -> CurrentConfig:
         telegram_webhook=settings.telegram_webhook,
         notion_api_key_set=bool(settings.notion_api_key),
         github_token_set=bool(settings.github_token),
+        ollama_model=settings.ollama_model,
+        cloud_provider=settings.cloud_provider,
+        cloud_model=settings.cloud_model,
     )
 
 
@@ -201,6 +204,9 @@ async def save_config(req: SaveConfigRequest) -> SaveResult:
             telegram_webhook=req.telegram_webhook,
             notion_api_key=req.notion_api_key,
             github_token=req.github_token,
+            ollama_model=req.ollama_model,
+            cloud_provider=req.cloud_provider,
+            cloud_model=req.cloud_model,
         )
         yaml_path = settings.save_yaml()
         return SaveResult(ok=True, path=str(yaml_path))

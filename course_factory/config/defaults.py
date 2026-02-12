@@ -33,6 +33,11 @@ DEFAULT_CONFIG_YAML: str = """# ================================================
 # anthropic_api_key: ""
 # openai_api_key: ""
 
+# ── Model selection ─────────────────────────────────────────
+# ollama_model: "qwen2.5:14b"
+# cloud_provider: "anthropic"
+# cloud_model: "claude-sonnet-4-5-20250929"
+
 # ── Notifications ───────────────────────────────────────────
 # telegram_webhook: "http://localhost:5678/webhook/send-telegram"
 

@@ -25,6 +25,20 @@ export interface StageStatus {
   message: string;
 }
 
+export interface TokenUsage {
+  stage: string;
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  estimated_cost_usd: number;
+}
+
+export interface CourseTokens {
+  stages: Record<string, TokenUsage>;
+  total: TokenUsage | null;
+}
+
 export interface WorkspaceState {
   course: Course | null;
   tree: FileNode[];
@@ -34,6 +48,7 @@ export interface WorkspaceState {
   editContent: string;
   loading: boolean;
   stages: Record<string, StageStatus>;
+  tokens: CourseTokens | null;
 }
 
 export type WorkspaceAction =
@@ -44,4 +59,5 @@ export type WorkspaceAction =
   | { type: "SET_EDITING"; editing: boolean }
   | { type: "SET_EDIT_CONTENT"; content: string }
   | { type: "SET_LOADING"; loading: boolean }
-  | { type: "SET_STAGE_STATUS"; stage: string; status: StageStatus };
+  | { type: "SET_STAGE_STATUS"; stage: string; status: StageStatus }
+  | { type: "SET_TOKENS"; tokens: CourseTokens };

@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
 from course_factory.api.deps import get_workspace, get_settings
 from course_factory.api.schemas import (
+    CourseTokensResponse,
     FileTreeResponse,
     FileContentResponse,
     FileSaveRequest,
     StageStatusResponse,
+    TokenUsageResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,6 +87,29 @@ async def get_stage_status(course_id: str, stage_name: str) -> StageStatusRespon
     return StageStatusResponse(**status)
 
 
+@router.get("/tokens", response_model=CourseTokensResponse)
+async def get_course_tokens(course_id: str) -> CourseTokensResponse:
+    """Return accumulated token usage across all stages."""
+    ws = get_workspace()
+    tokens_path = Path(ws._course_dir(course_id)) / "_tokens.json"
+    if not tokens_path.is_file():
+        return CourseTokensResponse()
+    try:
+        data = json.loads(tokens_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return CourseTokensResponse()
+
+    stages: dict[str, TokenUsageResponse] = {}
+    total: TokenUsageResponse | None = None
+    for key, val in data.items():
+        entry = TokenUsageResponse(**{k: val[k] for k in TokenUsageResponse.model_fields if k in val})
+        if key == "_total":
+            total = entry
+        else:
+            stages[key] = entry
+    return CourseTokensResponse(stages=stages, total=total)
+
+
 async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
     """Execute a stage in the background."""
     try:
@@ -117,6 +144,11 @@ async def _run_stage(course_id: str, stage_name: str, key: str) -> None:
                 "notion_api_key": settings.notion_api_key,
                 "github_token": settings.github_token,
                 "ollama_url": settings.ollama_url,
+                "ollama_model": settings.ollama_model,
+                "cloud_provider": settings.cloud_provider,
+                "cloud_model": settings.cloud_model,
+                "anthropic_api_key": settings.anthropic_api_key,
+                "openai_api_key": settings.openai_api_key,
             },
         }
 

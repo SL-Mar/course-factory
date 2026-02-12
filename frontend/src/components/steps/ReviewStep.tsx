@@ -42,6 +42,9 @@ export function ReviewStep({ state, onBack }: ReviewStepProps) {
         qdrant_url: state.qdrant_url,
         redis_url: state.redis_url,
         telegram_webhook: state.telegram_webhook,
+        ollama_model: state.ollama_model,
+        cloud_provider: state.cloud_provider,
+        cloud_model: state.cloud_model,
       });
       if (result.ok) {
         setSaveResult({
@@ -103,6 +106,7 @@ export function ReviewStep({ state, onBack }: ReviewStepProps) {
           LLM Providers
         </h3>
         <ReviewRow label="Ollama" value={state.ollama_url} mono />
+        <ReviewRow label="Ollama Model" value={state.ollama_model} mono />
         <ReviewRow
           label="Anthropic"
           value={state.anthropic_api_key ? "Configured" : "Not set"}
@@ -111,6 +115,8 @@ export function ReviewStep({ state, onBack }: ReviewStepProps) {
           label="OpenAI"
           value={state.openai_api_key ? "Configured" : "Not set"}
         />
+        <ReviewRow label="Cloud Provider" value={state.cloud_provider} />
+        <ReviewRow label="Cloud Model" value={state.cloud_model} mono />
       </div>
 
       {/* Services */}

@@ -7,6 +7,8 @@ from typing import Any
 import aiohttp
 import httpx
 
+from course_factory.llm.types import ChatResult, TokenUsage
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,8 +21,8 @@ class LLMProvider(ABC):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-    ) -> str:
-        """Send a chat completion request and return the response text."""
+    ) -> ChatResult:
+        """Send a chat completion request and return the response with usage."""
         ...
 
     @abstractmethod
@@ -107,7 +109,7 @@ class OllamaProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-    ) -> str:
+    ) -> ChatResult:
         """Send a chat request to the Ollama /api/chat endpoint."""
         await self._fetch_context_length()
 
@@ -138,12 +140,25 @@ class OllamaProvider(LLMProvider):
                         )
                     data = await resp.json()
                     content: str = data["message"]["content"]
+                    prompt_tokens = data.get("prompt_eval_count", 0)
+                    completion_tokens = data.get("eval_count", 0)
+                    usage = TokenUsage(
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=prompt_tokens + completion_tokens,
+                    )
                     logger.debug(
-                        "Ollama chat response: model=%s length=%d",
+                        "Ollama chat response: model=%s length=%d tokens=%d",
                         self.model,
                         len(content),
+                        usage.total_tokens,
                     )
-                    return content
+                    return ChatResult(
+                        text=content,
+                        usage=usage,
+                        provider="ollama",
+                        model=self.model,
+                    )
         except aiohttp.ClientError as exc:
             logger.error("Ollama chat network error: %s", exc)
             raise RuntimeError(f"Ollama chat network error: {exc}") from exc
@@ -240,7 +255,7 @@ class AnthropicProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-    ) -> str:
+    ) -> ChatResult:
         """Send a chat request to the Anthropic Messages API."""
         headers = {
             "x-api-key": self.api_key,
@@ -285,12 +300,26 @@ class AnthropicProvider(LLMProvider):
                     )
                 data = resp.json()
                 content: str = data["content"][0]["text"]
+                api_usage = data.get("usage", {})
+                prompt_tokens = api_usage.get("input_tokens", 0)
+                completion_tokens = api_usage.get("output_tokens", 0)
+                usage = TokenUsage(
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=prompt_tokens + completion_tokens,
+                )
                 logger.debug(
-                    "Anthropic chat response: model=%s length=%d",
+                    "Anthropic chat response: model=%s length=%d tokens=%d",
                     self.model,
                     len(content),
+                    usage.total_tokens,
                 )
-                return content
+                return ChatResult(
+                    text=content,
+                    usage=usage,
+                    provider="anthropic",
+                    model=self.model,
+                )
         except httpx.HTTPError as exc:
             logger.error("Anthropic chat network error: %s", exc)
             raise RuntimeError(f"Anthropic chat network error: {exc}") from exc
@@ -329,7 +358,7 @@ class OpenAIProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-    ) -> str:
+    ) -> ChatResult:
         """Send a chat request to the OpenAI Chat Completions API."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -362,12 +391,26 @@ class OpenAIProvider(LLMProvider):
                     )
                 data = resp.json()
                 content: str = data["choices"][0]["message"]["content"]
+                api_usage = data.get("usage", {})
+                prompt_tokens = api_usage.get("prompt_tokens", 0)
+                completion_tokens = api_usage.get("completion_tokens", 0)
+                usage = TokenUsage(
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=prompt_tokens + completion_tokens,
+                )
                 logger.debug(
-                    "OpenAI chat response: model=%s length=%d",
+                    "OpenAI chat response: model=%s length=%d tokens=%d",
                     self.model,
                     len(content),
+                    usage.total_tokens,
                 )
-                return content
+                return ChatResult(
+                    text=content,
+                    usage=usage,
+                    provider="openai",
+                    model=self.model,
+                )
         except httpx.HTTPError as exc:
             logger.error("OpenAI chat network error: %s", exc)
             raise RuntimeError(f"OpenAI chat network error: {exc}") from exc

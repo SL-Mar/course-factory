@@ -43,6 +43,9 @@ export function saveConfig(config: {
   qdrant_url: string;
   redis_url: string;
   telegram_webhook: string;
+  ollama_model: string;
+  cloud_provider: string;
+  cloud_model: string;
 }): Promise<SaveResult> {
   return apiFetch<SaveResult>("/setup/save", {
     method: "POST",

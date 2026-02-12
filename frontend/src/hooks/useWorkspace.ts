@@ -10,6 +10,7 @@ import {
   saveFileContent,
   triggerStage,
   getStageStatus,
+  getCourseTokens,
 } from "../api/workspace";
 import { getCourse } from "../api/courses";
 
@@ -22,6 +23,7 @@ const initialState: WorkspaceState = {
   editContent: "",
   loading: false,
   stages: {},
+  tokens: null,
 };
 
 function reducer(
@@ -57,6 +59,8 @@ function reducer(
         ...state,
         stages: { ...state.stages, [action.stage]: action.status },
       };
+    case "SET_TOKENS":
+      return { ...state, tokens: action.tokens };
     default:
       return state;
   }
@@ -72,6 +76,7 @@ export function useWorkspace(courseId: string) {
       .then((course) => dispatch({ type: "SET_COURSE", course }))
       .catch(() => {});
     refreshTree();
+    refreshTokens();
     return () => {
       // cleanup poll intervals
       Object.values(pollRef.current).forEach(clearInterval);
@@ -81,6 +86,12 @@ export function useWorkspace(courseId: string) {
   const refreshTree = useCallback(() => {
     getFileTree(courseId)
       .then((tree) => dispatch({ type: "SET_TREE", tree }))
+      .catch(() => {});
+  }, [courseId]);
+
+  const refreshTokens = useCallback(() => {
+    getCourseTokens(courseId)
+      .then((tokens) => dispatch({ type: "SET_TOKENS", tokens }))
       .catch(() => {});
   }, [courseId]);
 
@@ -151,6 +162,7 @@ export function useWorkspace(courseId: string) {
             clearInterval(id);
             delete pollRef.current[stageName];
             refreshTree();
+            refreshTokens();
           }
         } catch {
           clearInterval(id);
@@ -159,7 +171,7 @@ export function useWorkspace(courseId: string) {
       }, 3000);
       pollRef.current[stageName] = id;
     },
-    [courseId, refreshTree],
+    [courseId, refreshTree, refreshTokens],
   );
 
   const stageStatus = useCallback(

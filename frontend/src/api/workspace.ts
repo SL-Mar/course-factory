@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { FileNode, StageStatus } from "../types/workspace";
+import type { CourseTokens, FileNode, StageStatus } from "../types/workspace";
 
 interface FileTreeResponse {
   tree: FileNode[];
@@ -52,4 +52,8 @@ export function getStageStatus(
   return apiFetch<StageStatus>(
     `/courses/${courseId}/workspace/stage/${stageName}/status`,
   );
+}
+
+export function getCourseTokens(courseId: string): Promise<CourseTokens> {
+  return apiFetch<CourseTokens>(`/courses/${courseId}/workspace/tokens`);
 }

@@ -36,6 +36,9 @@ class SaveConfigRequest(BaseModel):
     telegram_webhook: str = "http://localhost:5678/webhook/send-telegram"
     notion_api_key: str = ""
     github_token: str = ""
+    ollama_model: str = "qwen2.5:14b"
+    cloud_provider: str = "anthropic"
+    cloud_model: str = "claude-sonnet-4-5-20250929"
 
 
 # -- Responses ---------------------------------------------------------------
@@ -68,6 +71,9 @@ class CurrentConfig(BaseModel):
     telegram_webhook: str = ""
     notion_api_key_set: bool = False
     github_token_set: bool = False
+    ollama_model: str = ""
+    cloud_provider: str = ""
+    cloud_model: str = ""
 
 
 class SaveResult(BaseModel):
@@ -122,3 +128,20 @@ class FileSaveRequest(BaseModel):
 class StageStatusResponse(BaseModel):
     status: str = "idle"
     message: str = ""
+    tokens: TokenUsageResponse | None = None
+
+
+# -- Token tracking schemas --------------------------------------------------
+
+class TokenUsageResponse(BaseModel):
+    stage: str = ""
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    estimated_cost_usd: float = 0.0
+
+
+class CourseTokensResponse(BaseModel):
+    stages: dict[str, TokenUsageResponse] = Field(default_factory=dict)
+    total: TokenUsageResponse | None = None

@@ -18,6 +18,7 @@ export function WorkspacePage({ courseId, onBack }: WorkspacePageProps) {
         onBack={onBack}
         onRunStage={ws.runStage}
         stageStatus={ws.stageStatus}
+        tokenData={ws.state.tokens}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="w-64 flex-shrink-0 overflow-y-auto border-r border-surface-border bg-surface p-2">
