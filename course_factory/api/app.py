@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +12,8 @@ from fastapi.staticfiles import StaticFiles
 
 from course_factory import __version__
 from course_factory.api.setup_router import router as setup_router
+from course_factory.api.course_router import router as course_router
+from course_factory.api.workspace_router import router as workspace_router
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +35,11 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Setup wizard router
+# Routers
 # ---------------------------------------------------------------------------
 app.include_router(setup_router)
+app.include_router(course_router)
+app.include_router(workspace_router)
 
 
 # ---------------------------------------------------------------------------
@@ -46,46 +49,6 @@ app.include_router(setup_router)
 async def health() -> dict[str, str]:
     """Return service health status."""
     return {"status": "ok", "version": __version__}
-
-
-# ---------------------------------------------------------------------------
-# Courses
-# ---------------------------------------------------------------------------
-@app.get("/api/courses", tags=["courses"])
-async def list_courses() -> list[dict[str, Any]]:
-    """List all courses.
-
-    TODO: Wire up to the database layer once ``course_factory.db`` is
-    implemented.
-    """
-    # TODO: Replace with actual DB query
-    return []
-
-
-@app.get("/api/courses/{course_id}", tags=["courses"])
-async def get_course(course_id: str) -> dict[str, Any]:
-    """Get a single course by ID.
-
-    TODO: Fetch from the database and return full course metadata.
-    """
-    return {"id": course_id, "status": "not_implemented"}
-
-
-# ---------------------------------------------------------------------------
-# Pipeline
-# ---------------------------------------------------------------------------
-@app.get("/api/pipeline/{course_id}/status", tags=["pipeline"])
-async def pipeline_status(course_id: str) -> dict[str, Any]:
-    """Return the current pipeline status for a course.
-
-    TODO: Query the pipeline orchestrator for real-time stage progress.
-    """
-    return {
-        "course_id": course_id,
-        "stage": "unknown",
-        "progress": 0.0,
-        "message": "Pipeline status not yet implemented.",
-    }
 
 
 # ---------------------------------------------------------------------------

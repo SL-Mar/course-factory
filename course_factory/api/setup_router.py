@@ -47,6 +47,8 @@ async def get_current_config() -> CurrentConfig:
         anthropic_api_key_set=bool(settings.anthropic_api_key),
         openai_api_key_set=bool(settings.openai_api_key),
         telegram_webhook=settings.telegram_webhook,
+        notion_api_key_set=bool(settings.notion_api_key),
+        github_token_set=bool(settings.github_token),
     )
 
 
@@ -197,6 +199,8 @@ async def save_config(req: SaveConfigRequest) -> SaveResult:
             anthropic_api_key=req.anthropic_api_key,
             openai_api_key=req.openai_api_key,
             telegram_webhook=req.telegram_webhook,
+            notion_api_key=req.notion_api_key,
+            github_token=req.github_token,
         )
         yaml_path = settings.save_yaml()
         return SaveResult(ok=True, path=str(yaml_path))

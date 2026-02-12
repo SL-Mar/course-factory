@@ -1,11 +1,13 @@
-"""Pydantic schemas for the setup wizard API."""
+"""Pydantic schemas for the Course Factory API."""
 
 from __future__ import annotations
+
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-# -- Requests ----------------------------------------------------------------
+# -- Setup wizard requests ---------------------------------------------------
 
 class ValidateLicenseRequest(BaseModel):
     license_key: str = Field(..., description="Base64url-encoded license key")
@@ -32,6 +34,8 @@ class SaveConfigRequest(BaseModel):
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     telegram_webhook: str = "http://localhost:5678/webhook/send-telegram"
+    notion_api_key: str = ""
+    github_token: str = ""
 
 
 # -- Responses ---------------------------------------------------------------
@@ -62,9 +66,59 @@ class CurrentConfig(BaseModel):
     anthropic_api_key_set: bool = False
     openai_api_key_set: bool = False
     telegram_webhook: str = ""
+    notion_api_key_set: bool = False
+    github_token_set: bool = False
 
 
 class SaveResult(BaseModel):
     ok: bool
     path: str = ""
     error: str = ""
+
+
+# -- Course schemas ----------------------------------------------------------
+
+class CourseSource(BaseModel):
+    type: str = Field(..., description="Source type: notion, github, or url")
+    id: str = Field(default="", description="Notion page/DB ID")
+    owner: str = Field(default="", description="GitHub owner")
+    repo: str = Field(default="", description="GitHub repo name")
+    url: str = Field(default="", description="Web URL")
+
+
+class CourseCreateRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=500)
+    description: str = ""
+    sources: list[CourseSource] = Field(default_factory=list)
+
+
+class CourseResponse(BaseModel):
+    id: str
+    title: str
+    description: str = ""
+    sources: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class CourseListResponse(BaseModel):
+    courses: list[dict[str, Any]]
+
+
+# -- Workspace schemas -------------------------------------------------------
+
+class FileTreeResponse(BaseModel):
+    tree: list[dict[str, Any]]
+
+
+class FileContentResponse(BaseModel):
+    path: str
+    content: str
+
+
+class FileSaveRequest(BaseModel):
+    path: str
+    content: str
+
+
+class StageStatusResponse(BaseModel):
+    status: str = "idle"
+    message: str = ""

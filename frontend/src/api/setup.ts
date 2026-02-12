@@ -7,11 +7,11 @@ import type {
 } from "../types/setup";
 
 export function getCurrentConfig(): Promise<CurrentConfig> {
-  return apiFetch<CurrentConfig>("/current");
+  return apiFetch<CurrentConfig>("/setup/current");
 }
 
 export function validateLicense(license_key: string): Promise<LicenseInfo> {
-  return apiFetch<LicenseInfo>("/validate-license", {
+  return apiFetch<LicenseInfo>("/setup/validate-license", {
     method: "POST",
     body: JSON.stringify({ license_key }),
   });
@@ -21,14 +21,14 @@ export function testConnection(
   service: string,
   url: string,
 ): Promise<ConnectionResult> {
-  return apiFetch<ConnectionResult>("/test-connection", {
+  return apiFetch<ConnectionResult>("/setup/test-connection", {
     method: "POST",
     body: JSON.stringify({ service, url }),
   });
 }
 
 export function testTelegram(webhook_url: string): Promise<ConnectionResult> {
-  return apiFetch<ConnectionResult>("/test-telegram", {
+  return apiFetch<ConnectionResult>("/setup/test-telegram", {
     method: "POST",
     body: JSON.stringify({ webhook_url }),
   });
@@ -44,7 +44,7 @@ export function saveConfig(config: {
   redis_url: string;
   telegram_webhook: string;
 }): Promise<SaveResult> {
-  return apiFetch<SaveResult>("/save", {
+  return apiFetch<SaveResult>("/setup/save", {
     method: "POST",
     body: JSON.stringify(config),
   });

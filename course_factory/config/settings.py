@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
     openai_api_key: str = Field(default="", description="OpenAI API key")
 
+    # ── integrations ──────────────────────────────────────────────────
+    notion_api_key: str = Field(default="", description="Notion integration token")
+    github_token: str = Field(default="", description="GitHub personal access token")
+
     # ── notifications ───────────────────────────────────────────────────
     telegram_webhook: str = Field(
         default="http://localhost:5678/webhook/send-telegram",
