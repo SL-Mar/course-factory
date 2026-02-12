@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from course_factory import __version__
+from course_factory.api.setup_router import router as setup_router
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +32,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------------
+# Setup wizard router
+# ---------------------------------------------------------------------------
+app.include_router(setup_router)
 
 
 # ---------------------------------------------------------------------------
@@ -77,3 +86,20 @@ async def pipeline_status(course_id: str) -> dict[str, Any]:
         "progress": 0.0,
         "message": "Pipeline status not yet implemented.",
     }
+
+
+# ---------------------------------------------------------------------------
+# Static files — SPA fallback (must be last)
+# ---------------------------------------------------------------------------
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+if _STATIC_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=_STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str) -> FileResponse:
+        """Serve the SPA index.html for any unmatched route."""
+        file_path = _STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_STATIC_DIR / "index.html")

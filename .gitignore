@@ -37,6 +37,14 @@ htmlcov/
 *.swp
 *.swo
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.d.ts
+frontend/vite.config.js
+course_factory/api/static/
+
 # OS
 .DS_Store
 Thumbs.db

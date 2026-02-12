@@ -22,7 +22,7 @@ services:
       timescaledb:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "8006:8006"
     environment:
       CF_DB_URL: postgresql://cf:cf@timescaledb:5432/course_factory
       CF_OLLAMA_URL: http://host.docker.internal:11434
@@ -30,7 +30,7 @@ services:
       CF_REDIS_URL: redis://host.docker.internal:6379/2
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: ["python", "-m", "uvicorn", "course_factory.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["python", "-m", "uvicorn", "course_factory.api.app:app", "--host", "0.0.0.0", "--port", "8006"]
 
 volumes:
   cf_pgdata:
