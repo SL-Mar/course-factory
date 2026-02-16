@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import type { WorkspaceMeta, View } from "../../types";
 import { getWorkspaceMeta, createWorkspaceMeta } from "../../api/pages";
+import { WorkspaceIcon, ICON_KEYS } from "../shared/WorkspaceIcon";
 
 interface HomeViewProps {
   onSelectWorkspace: (workspace: string) => void;
@@ -11,13 +14,6 @@ const DEFAULT_COLORS = [
   "#2383e2", "#7c3aed", "#059669", "#dc2626",
   "#d97706", "#0891b2", "#4f46e5", "#be185d",
   "#65a30d", "#0d9488", "#ea580c",
-];
-
-const EMOJI_PICKS = [
-  "\uD83D\uDCC1", "\uD83D\uDE80", "\u2693", "\uD83D\uDCCA", "\uD83D\uDCAC",
-  "\u26F5", "\uD83D\uDDA5\uFE0F", "\uD83C\uDF0A", "\uD83D\uDCDD", "\uD83D\uDCDA",
-  "\u2699\uFE0F", "\uD83D\uDD11", "\uD83C\uDFE0", "\uD83D\uDEE0\uFE0F", "\uD83D\uDCC8",
-  "\uD83E\uDDE0", "\uD83C\uDF1F", "\uD83D\uDCA1", "\uD83C\uDFAF", "\uD83D\uDD0D",
 ];
 
 export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
@@ -79,8 +75,8 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
                 }}
               >
                 {/* Icon */}
-                <span className="text-2xl mb-2">
-                  {ws.icon || "\uD83D\uDCC1"}
+                <span className="mb-3" style={{ color: ws.color }}>
+                  <WorkspaceIcon icon={ws.icon} size="lg" />
                 </span>
                 {/* Name */}
                 <span className="text-sm font-medium text-content-text capitalize group-hover:text-accent-light transition-colors">
@@ -109,7 +105,7 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
               onClick={() => setShowModal(true)}
               className="home-tile flex flex-col items-center justify-center p-5 rounded-xl border border-dashed border-content-border/60 hover:border-accent/40 bg-content-secondary/50 transition-all duration-200 min-h-[120px]"
             >
-              <span className="text-2xl text-content-faint mb-1">+</span>
+              <FontAwesomeIcon icon={faPlus} className="text-content-faint mb-1" size="lg" />
               <span className="text-xs text-content-muted">New Workspace</span>
             </button>
           </div>
@@ -141,7 +137,7 @@ interface CreateModalProps {
 
 function CreateWorkspaceModal({ onClose, onCreated, existingCount }: CreateModalProps) {
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState("\uD83D\uDCC1");
+  const [icon, setIcon] = useState("folder");
   const [color, setColor] = useState(DEFAULT_COLORS[existingCount % DEFAULT_COLORS.length]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -196,22 +192,23 @@ function CreateWorkspaceModal({ onClose, onCreated, existingCount }: CreateModal
             />
           </div>
 
-          {/* Icon picker */}
+          {/* Icon picker — FA icons */}
           <div>
             <label className="block text-xs text-content-muted mb-1">Icon</label>
             <div className="flex flex-wrap gap-1.5">
-              {EMOJI_PICKS.map((em) => (
+              {ICON_KEYS.map((key) => (
                 <button
-                  key={em}
+                  key={key}
                   type="button"
-                  onClick={() => setIcon(em)}
-                  className={`w-8 h-8 flex items-center justify-center rounded text-lg transition-colors ${
-                    icon === em
-                      ? "bg-accent/20 ring-1 ring-accent"
-                      : "hover:bg-content-tertiary"
+                  onClick={() => setIcon(key)}
+                  className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+                    icon === key
+                      ? "bg-accent/20 ring-1 ring-accent text-accent"
+                      : "text-content-muted hover:bg-content-tertiary"
                   }`}
+                  title={key}
                 >
-                  {em}
+                  <WorkspaceIcon icon={key} size="sm" />
                 </button>
               ))}
             </div>

@@ -29,6 +29,7 @@ import {
   reorderPages,
 } from "../../api/pages";
 import { listTables } from "../../api/tables";
+import { WorkspaceIcon } from "../shared/WorkspaceIcon";
 
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 420;
@@ -541,7 +542,7 @@ export function Sidebar({
                   onClick={() => toggleSection(wsKey)}
                   className="flex items-center gap-1.5 min-w-0"
                 >
-                  <span className="text-sm shrink-0">{ws.icon || "\uD83D\uDCC1"}</span>
+                  <span className="shrink-0 opacity-70"><WorkspaceIcon icon={ws.icon} size="xs" /></span>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted/60 group-hover:text-sidebar-muted transition-colors truncate">
                     {ws.name}
                     <span className="ml-1.5 text-[10px] font-normal opacity-50">

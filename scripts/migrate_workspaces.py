@@ -23,13 +23,13 @@ from pathlib import Path
 WORKSPACES = [
     {
         "name": "admin",
-        "icon": "\U0001F4C1",  # folder
+        "icon": "folder",
         "color": "#d97706",
         "keywords": [r"\d+ euros", r"subscriptions", r"hospital", r"ospedale"],
     },
     {
         "name": "zvezda",
-        "icon": "\u2693",  # anchor
+        "icon": "anchor",
         "color": "#0891b2",
         "keywords": [
             r"hull", r"drydock", r"keel", r"cabin", r"lifejacket",
@@ -41,7 +41,7 @@ WORKSPACES = [
     },
     {
         "name": "windmar",
-        "icon": "\U0001F30A",  # wave
+        "icon": "wind",
         "color": "#059669",
         "keywords": [
             r"windmar", r"spec p\d", r"maritime os", r"\bais\b",
@@ -53,7 +53,7 @@ WORKSPACES = [
     },
     {
         "name": "quantmar",
-        "icon": "\U0001F4CA",  # chart
+        "icon": "chart-line",
         "color": "#4f46e5",
         "keywords": [
             r"quantmar", r"strategy \d", r"backtest",
@@ -64,7 +64,7 @@ WORKSPACES = [
     },
     {
         "name": "marchat",
-        "icon": "\U0001F4AC",  # chat
+        "icon": "comment-dots",
         "color": "#7c3aed",
         "keywords": [
             r"marchat", r"\bsolas\b", r"\bstcw\b",
@@ -73,13 +73,13 @@ WORKSPACES = [
     },
     {
         "name": "amphitrite",
-        "icon": "\u26F5",  # sailboat
+        "icon": "sailboat",
         "color": "#0d9488",
         "keywords": [r"amphitrite"],
     },
     {
         "name": "development",
-        "icon": "\U0001F5A5\uFE0F",  # desktop
+        "icon": "code",
         "color": "#2383e2",
         "keywords": [
             r"\bclaude\b", r"cli.first", r"course factory",
@@ -90,7 +90,7 @@ WORKSPACES = [
     },
     {
         "name": "marine-issues",
-        "icon": "\U0001F6E0\uFE0F",  # wrench
+        "icon": "screwdriver-wrench",
         "color": "#dc2626",
         "keywords": [
             r"\bmiros\b", r"marine osint", r"shipboard",
@@ -98,7 +98,7 @@ WORKSPACES = [
     },
     {
         "name": "articles",
-        "icon": "\U0001F4DD",  # memo
+        "icon": "newspaper",
         "color": "#be185d",
         "keywords": [
             r"article", r"\bdcr\b", r"distance.*criticality",
@@ -109,7 +109,7 @@ WORKSPACES = [
     },
     {
         "name": "q2c",
-        "icon": "\U0001F4DA",  # books
+        "icon": "book-open",
         "color": "#65a30d",
         "keywords": [
             r"chapter \d", r"module \d", r"part \d",
@@ -118,7 +118,7 @@ WORKSPACES = [
     },
     {
         "name": "trading",
-        "icon": "\U0001F4C8",  # chart up
+        "icon": "arrow-trend-up",
         "color": "#ea580c",
         "keywords": [
             r"\bgold\b", r"\bsilver\b", r"\bxau\b", r"\bxag\b",
