@@ -1,91 +1,189 @@
+import { useState, useEffect, useCallback } from "react";
 import { AppShell } from "./components/layout/AppShell";
-import { WizardLayout } from "./components/layout/WizardLayout";
-import { WelcomeStep } from "./components/steps/WelcomeStep";
-import { LicenseStep } from "./components/steps/LicenseStep";
-import { LlmStep } from "./components/steps/LlmStep";
-import { ServicesStep } from "./components/steps/ServicesStep";
-import { NotificationsStep } from "./components/steps/NotificationsStep";
-import { ReviewStep } from "./components/steps/ReviewStep";
-import { Dashboard } from "./components/dashboard/Dashboard";
-import { WorkspacePage } from "./components/workspace/WorkspacePage";
+import { PageEditor } from "./components/editor/PageEditor";
+import { PageList } from "./components/pages/PageList";
+import { TableView } from "./components/tables/TableView";
+import { GraphView } from "./components/graph/GraphView";
+import { ChatPanel } from "./components/ai/ChatPanel";
+import { SearchModal } from "./components/search/SearchModal";
+import { EnginePanel } from "./components/engines/EnginePanel";
 import { useApp } from "./hooks/useApp";
-import { useSetupWizard } from "./hooks/useSetupWizard";
+import type { Page, View } from "./types";
+import { searchPages } from "./api/pages";
 
 export default function App() {
-  const { state: appState, navigate, openCourse } = useApp();
-  const wizard = useSetupWizard();
+  const {
+    state,
+    navigate,
+    openPage,
+    closePage,
+    openTable,
+    setWorkspace,
+    toggleSidebar,
+    openSearch,
+    closeSearch,
+  } = useApp();
 
-  const renderSetup = () => {
-    const { state, dispatch, setField, goNext, goBack, goTo } = wizard;
-    const stepContent = () => {
-      switch (state.currentStep) {
-        case "welcome":
-          return <WelcomeStep onNext={goNext} />;
-        case "license":
-          return (
-            <LicenseStep
-              state={state}
-              setField={setField}
-              dispatch={dispatch}
-              onNext={goNext}
-              onBack={goBack}
-            />
-          );
-        case "llm":
-          return (
-            <LlmStep
-              state={state}
-              setField={setField}
-              onNext={goNext}
-              onBack={goBack}
-            />
-          );
-        case "services":
-          return (
-            <ServicesStep
-              state={state}
-              setField={setField}
-              onNext={goNext}
-              onBack={goBack}
-            />
-          );
-        case "notifications":
-          return (
-            <NotificationsStep
-              state={state}
-              setField={setField}
-              onNext={goNext}
-              onBack={goBack}
-            />
-          );
-        case "review":
-          return <ReviewStep state={state} onBack={goBack} />;
+  // Global Cmd+K shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        if (state.searchOpen) {
+          closeSearch();
+        } else {
+          openSearch();
+        }
       }
     };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [state.searchOpen, openSearch, closeSearch]);
 
-    return (
-      <WizardLayout currentStep={state.currentStep} onStepClick={goTo}>
-        {stepContent()}
-      </WizardLayout>
-    );
+  // Handle wiki-link clicks: search for the page by title and open it
+  const handleWikiLinkClick = useCallback(
+    async (target: string) => {
+      try {
+        const results = await searchPages(target);
+        if (results.length > 0) {
+          openPage(results[0].page);
+        }
+      } catch {
+        // Fallback: ignore if search fails
+      }
+    },
+    [openPage],
+  );
+
+  // Handle graph node click
+  const handleGraphNodeClick = useCallback(
+    async (pageId: string, _title: string) => {
+      try {
+        const results = await searchPages(pageId);
+        if (results.length > 0) {
+          openPage(results[0].page);
+        }
+      } catch {
+        // Ignore
+      }
+    },
+    [openPage],
+  );
+
+  const [refreshKey, setRefreshKey] = useState(0);
+  const triggerRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  const handlePageUpdated = useCallback((_page: Page) => {
+    triggerRefresh();
+  }, [triggerRefresh]);
+
+  const handleSearchNavigate = useCallback(
+    (view: string) => {
+      navigate(view as View);
+    },
+    [navigate],
+  );
+
+  const renderContent = () => {
+    switch (state.view) {
+      case "pages":
+        return (
+          <PageList
+            workspace={state.activeWorkspace}
+            onOpenPage={openPage}
+          />
+        );
+
+      case "page-editor":
+        if (!state.activePage) {
+          return (
+            <PageList
+              workspace={state.activeWorkspace}
+              onOpenPage={openPage}
+            />
+          );
+        }
+        return (
+          <PageEditor
+            page={state.activePage}
+            onClose={() => { closePage(); triggerRefresh(); }}
+            onPageUpdated={handlePageUpdated}
+            onWikiLinkClick={handleWikiLinkClick}
+          />
+        );
+
+      case "tables":
+        return <TableView tableName={null} onOpenTable={openTable} />;
+
+      case "table-view":
+        return (
+          <TableView
+            tableName={state.activeTable}
+            onOpenTable={openTable}
+          />
+        );
+
+      case "graph":
+        return (
+          <GraphView
+            focusPageId={state.activePage?.id}
+            onOpenPage={handleGraphNodeClick}
+          />
+        );
+
+      case "ai-chat":
+        return (
+          <ChatPanel
+            activePageId={state.activePage?.id}
+            activePageContent={state.activePage?.content}
+          />
+        );
+
+      case "engines":
+        return <EnginePanel />;
+
+      case "trash":
+        return (
+          <PageList
+            workspace={state.activeWorkspace}
+            onOpenPage={openPage}
+            showTrashed={true}
+          />
+        );
+
+      default:
+        return (
+          <PageList
+            workspace={state.activeWorkspace}
+            onOpenPage={openPage}
+          />
+        );
+    }
   };
 
   return (
-    <AppShell
-      currentView={appState.view}
-      hasActiveCourse={appState.activeCourseId !== null}
-      onNavigate={navigate}
-    >
-      {appState.view === "setup" && renderSetup()}
-      {appState.view === "dashboard" && (
-        <Dashboard onOpenCourse={openCourse} />
-      )}
-      {appState.view === "workspace" && appState.activeCourseId && (
-        <WorkspacePage
-          courseId={appState.activeCourseId}
-          onBack={() => navigate("dashboard")}
-        />
-      )}
-    </AppShell>
+    <>
+      <AppShell
+        currentView={state.view}
+        activeWorkspace={state.activeWorkspace}
+        sidebarCollapsed={state.sidebarCollapsed}
+        refreshKey={refreshKey}
+        onNavigate={navigate}
+        onOpenPage={openPage}
+        onOpenTable={openTable}
+        onSetWorkspace={setWorkspace}
+        onToggleSidebar={toggleSidebar}
+        onOpenSearch={openSearch}
+      >
+        {renderContent()}
+      </AppShell>
+
+      <SearchModal
+        isOpen={state.searchOpen}
+        onClose={closeSearch}
+        onOpenPage={openPage}
+        onNavigate={handleSearchNavigate}
+      />
+    </>
   );
 }

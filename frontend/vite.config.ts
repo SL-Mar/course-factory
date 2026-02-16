@@ -1,20 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3006,
+    port: 3000,
     proxy: {
       "/api": {
-        target: "http://localhost:8006",
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },
   },
   build: {
-    outDir: path.resolve(__dirname, "../course_factory/api/static"),
+    outDir: "/home/slmar/projects/course-factory/localnotion/api/static",
     emptyOutDir: true,
   },
 });

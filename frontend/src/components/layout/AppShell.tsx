@@ -1,79 +1,49 @@
 import type { ReactNode } from "react";
-import type { AppView } from "../../types/app";
-import { cn } from "../../utils/cn";
+import { Sidebar } from "./Sidebar";
+import type { View, Page } from "../../types";
 
 interface AppShellProps {
-  currentView: AppView;
-  hasActiveCourse: boolean;
-  onNavigate: (view: AppView) => void;
+  currentView: View;
+  activeWorkspace: string;
+  sidebarCollapsed: boolean;
+  refreshKey: number;
+  onNavigate: (view: View) => void;
+  onOpenPage: (page: Page) => void;
+  onOpenTable: (name: string) => void;
+  onSetWorkspace: (workspace: string) => void;
+  onToggleSidebar: () => void;
+  onOpenSearch: () => void;
   children: ReactNode;
 }
 
-export function AppShell({ currentView, hasActiveCourse, onNavigate, children }: AppShellProps) {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-surface-border px-6 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <button
-            onClick={() => onNavigate("dashboard")}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-              CF
-            </div>
-            <span className="text-sm font-semibold text-gray-300">
-              Course Factory
-            </span>
-          </button>
-          <nav className="flex items-center gap-1">
-            <NavButton
-              active={currentView === "dashboard"}
-              onClick={() => onNavigate("dashboard")}
-            >
-              Courses
-            </NavButton>
-            {hasActiveCourse && (
-              <NavButton
-                active={currentView === "workspace"}
-                onClick={() => onNavigate("workspace")}
-              >
-                Workspace
-              </NavButton>
-            )}
-            <NavButton
-              active={currentView === "setup"}
-              onClick={() => onNavigate("setup")}
-            >
-              Settings
-            </NavButton>
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
-  );
-}
-
-function NavButton({
-  active,
-  onClick,
+export function AppShell({
+  currentView,
+  activeWorkspace,
+  sidebarCollapsed,
+  refreshKey,
+  onNavigate,
+  onOpenPage,
+  onOpenTable,
+  onSetWorkspace,
+  onToggleSidebar,
+  onOpenSearch,
   children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
+}: AppShellProps) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-3 py-1.5 text-sm transition-colors",
-        active
-          ? "bg-surface-card text-gray-100"
-          : "text-gray-500 hover:text-gray-300",
-      )}
-    >
-      {children}
-    </button>
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar
+        currentView={currentView}
+        activeWorkspace={activeWorkspace}
+        collapsed={sidebarCollapsed}
+        refreshKey={refreshKey}
+        onNavigate={onNavigate}
+        onOpenPage={onOpenPage}
+        onOpenTable={onOpenTable}
+        onSetWorkspace={onSetWorkspace}
+        onToggle={onToggleSidebar}
+        onOpenSearch={onOpenSearch}
+      />
+      <main className="flex-1 overflow-hidden bg-content">{children}</main>
+    </div>
   );
 }

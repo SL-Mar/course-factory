@@ -15,13 +15,28 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${BASE}${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (options.headers) {
+    Object.assign(headers, options.headers);
+  }
+
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
+    headers,
   });
+
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
     throw new ApiError(res.status, text);
   }
-  return res.json() as Promise<T>;
+
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return res.json() as Promise<T>;
+  }
+
+  return res.text() as unknown as T;
 }

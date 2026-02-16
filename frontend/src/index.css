@@ -2,37 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-surface: #0f0f0f;
-  --color-card: #1a1a1a;
-  --color-border: #2a2a2a;
-}
-
 body {
-  background-color: var(--color-surface);
   min-height: 100vh;
+  background: #1e1e32;
+  color: #d4d4dc;
 }
 
-/* Scrollbar styling */
+/* Scrollbar — thin, dark */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-surface);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #3a3a52;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: #4a4a62;
 }
 
-/* Markdown viewer - dark theme */
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #33334a;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #44445a;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Markdown viewer */
 .markdown-body {
-  color: #d1d5db; /* gray-300 */
+  color: #d0d0da;
   font-size: 0.9375rem;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .markdown-body h1,
@@ -41,15 +47,15 @@ body {
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-  color: #f3f4f6; /* gray-100 */
+  color: #e4e4ec;
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
   line-height: 1.3;
 }
 
-.markdown-body h1 { font-size: 1.75rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 0.3em; }
-.markdown-body h2 { font-size: 1.375rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 0.3em; }
+.markdown-body h1 { font-size: 1.75rem; border-bottom: 1px solid #2e2e48; padding-bottom: 0.3em; }
+.markdown-body h2 { font-size: 1.35rem; border-bottom: 1px solid #2e2e48; padding-bottom: 0.3em; }
 .markdown-body h3 { font-size: 1.125rem; }
 .markdown-body h4 { font-size: 1rem; }
 
@@ -58,7 +64,7 @@ body {
 }
 
 .markdown-body a {
-  color: #818cf8; /* indigo-400 */
+  color: #529CCA;
   text-decoration: none;
 }
 .markdown-body a:hover {
@@ -79,26 +85,27 @@ body {
 }
 
 .markdown-body blockquote {
-  border-left: 3px solid #818cf8;
+  border-left: 3px solid #2383e2;
   padding: 0.5em 1em;
   margin: 0 0 1em 0;
-  color: #9ca3af; /* gray-400 */
-  background: rgba(129, 140, 248, 0.05);
+  color: #8b8ba0;
+  background: rgba(35, 131, 226, 0.06);
   border-radius: 0 4px 4px 0;
 }
 
 .markdown-body code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.875em;
-  background: #1a1a1a;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85em;
+  background: #2a2a42;
   padding: 0.15em 0.35em;
-  border-radius: 4px;
+  border-radius: 3px;
+  color: #eb5757;
 }
 
 .markdown-body pre {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
+  background: #18182c;
+  border: 1px solid #2e2e48;
+  border-radius: 4px;
   padding: 1em;
   overflow-x: auto;
   margin-bottom: 1em;
@@ -107,147 +114,92 @@ body {
   background: none;
   padding: 0;
   font-size: 0.85em;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: #d0d0da;
 }
 
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1em;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 .markdown-body th,
 .markdown-body td {
-  border: 1px solid #2a2a2a;
-  padding: 0.5em 0.75em;
+  border: 1px solid #2e2e48;
+  padding: 0.4em 0.75em;
   text-align: left;
 }
 .markdown-body th {
-  background: #1a1a1a;
-  color: #f3f4f6;
+  background: #28283e;
+  color: #d4d4dc;
   font-weight: 600;
 }
 .markdown-body tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: #1c1c30;
 }
 
 .markdown-body hr {
   border: none;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid #2e2e48;
   margin: 1.5em 0;
 }
 
 .markdown-body img {
   max-width: 100%;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
-/* KaTeX dark-theme overrides */
-.markdown-body .katex { color: #e5e7eb; }
-.markdown-body .katex .mord,
-.markdown-body .katex .mbin,
-.markdown-body .katex .mrel,
-.markdown-body .katex .mopen,
-.markdown-body .katex .mclose,
-.markdown-body .katex .mpunct,
-.markdown-body .katex .mop { color: #e5e7eb; }
+/* KaTeX */
+.markdown-body .katex { color: #d0d0da; }
 
-/* Task list checkboxes (GFM) */
+/* Task list checkboxes */
 .markdown-body input[type="checkbox"] {
   margin-right: 0.4em;
-  accent-color: #818cf8;
+  accent-color: #2383e2;
 }
 
-/* ── Marp Slide Viewer ── */
-.marp-viewer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.marp-meta {
-  display: flex;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.marp-meta-item {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-}
-
-.marp-slide-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.marp-slide {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.marp-slide-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(99, 102, 241, 0.8);
-  color: #fff;
-  font-size: 0.625rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-  z-index: 1;
-}
-
-.marp-slide-content {
-  padding: 2rem 2.5rem;
-  overflow: auto;
-  height: 100%;
-  font-size: 0.85rem;
-}
-
-.marp-slide-content .markdown-body {
-  font-size: 0.85rem;
-  line-height: 1.6;
-}
-
-.marp-slide-content .markdown-body h1 { font-size: 1.5rem; }
-.marp-slide-content .markdown-body h2 { font-size: 1.2rem; }
-.marp-slide-content .markdown-body h3 { font-size: 1rem; }
-
-.marp-notes {
-  margin-top: 0.25rem;
-}
-
-.marp-notes-toggle {
-  background: none;
-  border: none;
-  color: #6b7280;
-  font-size: 0.75rem;
+/* Wiki-link */
+.wiki-link {
+  color: #529CCA;
+  text-decoration: none;
+  border-bottom: 1px dashed #529CCA;
   cursor: pointer;
-  padding: 0.25rem 0;
+  transition: border-color 0.15s, color 0.15s;
 }
-.marp-notes-toggle:hover {
-  color: #9ca3af;
+.wiki-link:hover {
+  color: #2383e2;
+  border-bottom-style: solid;
 }
 
-.marp-notes-body {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  background: rgba(26, 26, 26, 0.5);
-  border-left: 2px solid #2a2a2a;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.25rem;
-  border-radius: 0 4px 4px 0;
-  white-space: pre-wrap;
+/* Search modal */
+.search-backdrop {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Editor textarea */
+.page-editor textarea {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  resize: none;
+}
+.page-editor textarea:focus {
+  outline: none;
+}
+
+/* Graph labels */
+.graph-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  fill: #8b8ba0;
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out;
 }
