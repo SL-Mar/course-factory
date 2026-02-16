@@ -6,8 +6,10 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+import asyncio
+
 import ulid as ulid_lib
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import Response
 
 from localnotion.api.deps import get_store, get_index, get_vector
@@ -327,3 +329,45 @@ async def search_pages(req: SearchRequest) -> SearchResultResponse:
     return SearchResultResponse(
         results=[{"page_id": p.id, "title": p.title, "score": 1.0, "chunk_text": "", "tags": p.tags} for p in title_results]
     )
+
+
+# -- Reindex ----------------------------------------------------------------
+
+_reindex_status: dict[str, Any] = {"running": False, "indexed": 0, "total": 0, "error": ""}
+
+
+async def _run_reindex() -> None:
+    """Background task: embed all pages into Qdrant."""
+    global _reindex_status
+    store = get_store()
+    vector = get_vector()
+    pages = store.list_all()
+    _reindex_status = {"running": True, "indexed": 0, "total": len(pages), "error": ""}
+    logger.info("Reindex started: %d pages", len(pages))
+    try:
+        for page in pages:
+            if page.is_deleted:
+                continue
+            await vector.index_page(page)
+            _reindex_status["indexed"] += 1
+    except Exception as exc:
+        _reindex_status["error"] = str(exc)
+        logger.error("Reindex failed: %s", exc)
+    finally:
+        _reindex_status["running"] = False
+        logger.info("Reindex complete: %d/%d pages", _reindex_status["indexed"], _reindex_status["total"])
+
+
+@router.post("/reindex")
+async def reindex_pages() -> dict[str, Any]:
+    """Trigger full vector reindex of all pages (runs in background)."""
+    if _reindex_status.get("running"):
+        return {"status": "already_running", **_reindex_status}
+    asyncio.create_task(_run_reindex())
+    return {"status": "started", "message": "Reindex started in background"}
+
+
+@router.get("/reindex/status")
+async def reindex_status() -> dict[str, Any]:
+    """Check reindex progress."""
+    return _reindex_status

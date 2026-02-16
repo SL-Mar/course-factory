@@ -116,7 +116,7 @@ class VectorIndex:
 
         embeddings = await self.embed_batch(chunks)
 
-        import ulid as ulid_lib
+        import uuid
 
         point_ids: list[str] = []
         points: list[dict[str, Any]] = []
@@ -124,7 +124,7 @@ class VectorIndex:
         for chunk, embedding in zip(chunks, embeddings):
             if not embedding:
                 continue
-            point_id = str(ulid_lib.ULID())
+            point_id = str(uuid.uuid4())
             points.append({
                 "id": point_id,
                 "vector": embedding,

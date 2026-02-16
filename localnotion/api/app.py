@@ -52,8 +52,10 @@ async def health() -> dict[str, str]:
 
 @app.on_event("startup")
 async def startup() -> None:
-    """Rebuild page index from disk on startup; seed if empty."""
-    from localnotion.api.deps import get_store, get_index
+    """Rebuild page index from disk on startup; seed if empty; auto-reindex vectors."""
+    import asyncio
+    from localnotion.api.deps import get_store, get_index, get_vector
+
     try:
         store = get_store()
         index = get_index()
@@ -68,6 +70,29 @@ async def startup() -> None:
         pages = store.list_all()
         index.rebuild_from_pages(pages)
         logger.info("Startup: indexed %d pages from disk", len(pages))
+
+        # Auto-reindex vectors if Qdrant collection is empty
+        try:
+            vector = get_vector()
+            await vector.ensure_collection()
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                resp = await session.get(
+                    f"{vector.qdrant_url}/collections/{vector.COLLECTION}",
+                    timeout=aiohttp.ClientTimeout(total=5),
+                )
+                if resp.status == 200:
+                    data = await resp.json()
+                    count = data.get("result", {}).get("points_count", 0)
+                    if count == 0:
+                        logger.info("Startup: Qdrant empty, launching background vector reindex for %d pages", len(pages))
+                        from localnotion.api.routers.pages import _run_reindex
+                        asyncio.create_task(_run_reindex())
+                    else:
+                        logger.info("Startup: Qdrant has %d points, skipping reindex", count)
+        except Exception:
+            logger.warning("Startup: vector reindex check failed", exc_info=True)
+
     except Exception:
         logger.warning("Startup indexing failed", exc_info=True)
 
