@@ -94,7 +94,7 @@ class SearchResultResponse(BaseModel):
 
 class GraphResponse(BaseModel):
     nodes: list[dict[str, Any]]
-    edges: list[dict[str, Any]]
+    links: list[dict[str, Any]]
 
 
 # -- Tables ------------------------------------------------------------------

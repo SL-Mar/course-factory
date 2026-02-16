@@ -2,28 +2,58 @@
 
 from __future__ import annotations
 
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Query
 
-from localnotion.api.deps import get_graph
+from localnotion.api.deps import get_graph, get_index
 from localnotion.api.schemas import GraphResponse
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
+
+
+def _enrich_graph(data: dict) -> dict:
+    """Rename edges→links and add tags/link_count to nodes."""
+    index = get_index()
+    edges = data.get("edges", [])
+    nodes = data.get("nodes", [])
+
+    # Count outgoing links per node
+    link_counts: dict[str, int] = {}
+    for edge in edges:
+        src = edge.get("source", "")
+        link_counts[src] = link_counts.get(src, 0) + 1
+
+    # Enrich nodes with tags and link_count
+    enriched_nodes = []
+    for node in nodes:
+        pid = node["id"]
+        row = index._conn.execute(
+            "SELECT tags FROM page_index WHERE id = ?", (pid,)
+        ).fetchone()
+        tags = json.loads(row["tags"]) if row and row["tags"] else []
+        enriched_nodes.append({
+            **node,
+            "tags": tags,
+            "link_count": link_counts.get(pid, 0),
+        })
+
+    return {"nodes": enriched_nodes, "links": edges}
 
 
 @router.get("")
 async def get_full_graph(workspace: Optional[str] = None) -> GraphResponse:
     graph = get_graph()
     data = graph.get_full_graph(workspace=workspace)
-    return GraphResponse(**data)
+    return GraphResponse(**_enrich_graph(data))
 
 
 @router.get("/{page_id}/neighborhood")
 async def get_neighborhood(page_id: str, depth: int = Query(default=2, ge=1, le=5)) -> GraphResponse:
     graph = get_graph()
     data = graph.get_neighborhood(page_id, depth=depth)
-    return GraphResponse(**data)
+    return GraphResponse(**_enrich_graph(data))
 
 
 @router.get("/{page_id}/backlinks")

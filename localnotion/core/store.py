@@ -90,7 +90,7 @@ class PageStore:
         if isinstance(modified, datetime):
             modified = modified.isoformat()
 
-        return Page(
+        page = Page(
             id=fm.get("id", ""),
             title=fm.get("title", "Untitled"),
             content=content,
@@ -108,6 +108,9 @@ class PageStore:
             is_favorite=fm.get("favorite", False),
             is_deleted=fm.get("deleted", False),
         )
+        # Always extract fresh wiki-links from content (frontmatter may be stale)
+        page.links = page.extract_wiki_links()
+        return page
 
     # ------------------------------------------------------------------
     # CRUD

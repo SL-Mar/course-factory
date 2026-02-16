@@ -43,6 +43,11 @@ class KnowledgeGraph:
         results = []
         for lid in link_ids:
             s = self.index.get_page_summary(lid)
+            if not s:
+                # lid may be a title — resolve to ID
+                resolved = self.index._resolve_title_to_id(lid)
+                if resolved:
+                    s = self.index.get_page_summary(resolved)
             if s:
                 results.append(s)
         return results
@@ -79,8 +84,9 @@ class KnowledgeGraph:
             if row and row["links"]:
                 import json
                 for target in json.loads(row["links"]):
-                    edges.append({"source": pid, "target": target})
-                    _traverse(target, current_depth + 1)
+                    target_id = self.index._resolve_title_to_id(target) or target
+                    edges.append({"source": pid, "target": target_id})
+                    _traverse(target_id, current_depth + 1)
 
             # Backlinks
             for bl in self.index.get_backlinks(pid):
@@ -118,6 +124,7 @@ class KnowledgeGraph:
     def get_full_graph(self, workspace: Optional[str] = None) -> dict[str, Any]:
         """Return the full knowledge graph for visualization."""
         pages = self.index.list_pages(workspace=workspace, limit=5000)
+        node_ids = {p.id for p in pages}
         nodes = [
             {"id": p.id, "title": p.title, "type": p.type, "workspace": p.workspace}
             for p in pages
@@ -131,6 +138,13 @@ class KnowledgeGraph:
             ).fetchone()
             if row and row["links"]:
                 for target in json.loads(row["links"]):
-                    edges.append({"source": p.id, "target": target})
+                    # Resolve title to page ID if needed
+                    target_id = target
+                    if target not in node_ids:
+                        resolved = self.index._resolve_title_to_id(target)
+                        if resolved:
+                            target_id = resolved
+                    if target_id in node_ids:
+                        edges.append({"source": p.id, "target": target_id})
 
         return {"nodes": nodes, "edges": edges}

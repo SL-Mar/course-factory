@@ -145,10 +145,20 @@ class PageIndex:
         self._conn.execute("DELETE FROM backlinks WHERE source_id = ?", (page_id,))
         self._conn.commit()
 
+    def _resolve_title_to_id(self, title: str) -> str | None:
+        """Look up a page ID by title (case-insensitive)."""
+        row = self._conn.execute(
+            "SELECT id FROM page_index WHERE LOWER(title) = LOWER(?) LIMIT 1",
+            (title,),
+        ).fetchone()
+        return row["id"] if row else None
+
     def _rebuild_backlinks(self, page: Page) -> None:
         """Rebuild outgoing backlinks for a page."""
         self._conn.execute("DELETE FROM backlinks WHERE source_id = ?", (page.id,))
-        for target_id in page.links:
+        for target in page.links:
+            # Resolve title to page ID; skip unresolvable links
+            target_id = self._resolve_title_to_id(target) or target
             self._conn.execute(
                 "INSERT OR IGNORE INTO backlinks (source_id, target_id, context) VALUES (?,?,?)",
                 (page.id, target_id, ""),
