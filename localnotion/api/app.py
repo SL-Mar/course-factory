@@ -18,6 +18,7 @@ from localnotion.api.routers.ai import router as ai_router
 from localnotion.api.routers.engines import router as engines_router
 from localnotion.api.routers.imports import router as imports_router
 from localnotion.api.routers.setup import router as setup_router
+from localnotion.api.routers.assets import router as assets_router
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ app.include_router(ai_router)
 app.include_router(engines_router)
 app.include_router(imports_router)
 app.include_router(setup_router)
+app.include_router(assets_router)
 
 
 @app.get("/health", tags=["system"])

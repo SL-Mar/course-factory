@@ -4,6 +4,9 @@ import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import type { Page, PageUpdate } from "../../types";
 import { getPage, updatePage, deletePage } from "../../api/pages";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { SlashCommandMenu, type SlashCommandItem } from "./SlashCommandMenu";
+import { ImageUploadModal } from "./ImageUploadModal";
+import { PagePickerModal } from "./PagePickerModal";
 
 interface PageEditorProps {
   page: Page;
@@ -30,6 +33,16 @@ export function PageEditor({
   const [showMenu, setShowMenu] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Slash command state
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashQuery, setSlashQuery] = useState("");
+  const [slashPos, setSlashPos] = useState({ top: 0, left: 0 });
+  const slashStartRef = useRef<number>(-1);
+
+  // Modal state
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [pagePickerOpen, setPagePickerOpen] = useState(false);
 
   // Reload page data on mount
   useEffect(() => {
@@ -133,7 +146,173 @@ export function PageEditor({
     }
   };
 
-  const handleTabKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  // ── Slash command detection ──────────────────────────────────────
+
+  const getCaretCoordinates = (): { top: number; left: number } => {
+    const textarea = textareaRef.current;
+    if (!textarea) return { top: 0, left: 0 };
+
+    // Create a mirror div to measure caret position
+    const mirror = document.createElement("div");
+    const style = window.getComputedStyle(textarea);
+    const props = [
+      "fontFamily", "fontSize", "fontWeight", "letterSpacing", "lineHeight",
+      "padding", "paddingTop", "paddingLeft", "paddingRight", "paddingBottom",
+      "border", "borderWidth", "boxSizing", "whiteSpace", "wordWrap", "overflowWrap",
+    ] as const;
+    props.forEach((prop) => {
+      mirror.style[prop as any] = style.getPropertyValue(prop.replace(/([A-Z])/g, "-$1").toLowerCase());
+    });
+    mirror.style.position = "absolute";
+    mirror.style.visibility = "hidden";
+    mirror.style.whiteSpace = "pre-wrap";
+    mirror.style.width = `${textarea.clientWidth}px`;
+    mirror.style.overflow = "hidden";
+
+    const text = textarea.value.substring(0, textarea.selectionStart);
+    mirror.textContent = text;
+
+    const span = document.createElement("span");
+    span.textContent = "|";
+    mirror.appendChild(span);
+    document.body.appendChild(mirror);
+
+    const rect = textarea.getBoundingClientRect();
+    const spanRect = span.getBoundingClientRect();
+    const mirrorRect = mirror.getBoundingClientRect();
+
+    const top = rect.top + (spanRect.top - mirrorRect.top) - textarea.scrollTop + 20;
+    const left = rect.left + (spanRect.left - mirrorRect.left) - textarea.scrollLeft;
+
+    document.body.removeChild(mirror);
+
+    return {
+      top: Math.min(top, window.innerHeight - 340),
+      left: Math.min(left, window.innerWidth - 300),
+    };
+  };
+
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const pos = e.target.selectionStart;
+    handleContentChange(value);
+
+    // Check if user just typed "/" at start of line or after whitespace
+    if (pos > 0 && value[pos - 1] === "/") {
+      const charBefore = pos >= 2 ? value[pos - 2] : "\n";
+      if (charBefore === "\n" || charBefore === " " || charBefore === "\t" || pos === 1) {
+        slashStartRef.current = pos - 1;
+        setSlashQuery("");
+        setSlashPos(getCaretCoordinates());
+        setSlashOpen(true);
+        return;
+      }
+    }
+
+    // Update slash query if menu is open
+    if (slashOpen && slashStartRef.current >= 0) {
+      const query = value.substring(slashStartRef.current + 1, pos);
+      if (query.includes("\n") || query.includes(" ") || pos <= slashStartRef.current) {
+        setSlashOpen(false);
+        slashStartRef.current = -1;
+      } else {
+        setSlashQuery(query);
+      }
+    }
+  };
+
+  const insertTextAtCursor = useCallback((text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // If slash menu was open, replace from slash start
+    let start: number;
+    let end: number;
+    if (slashStartRef.current >= 0) {
+      start = slashStartRef.current;
+      end = textarea.selectionStart;
+    } else {
+      start = textarea.selectionStart;
+      end = textarea.selectionEnd;
+    }
+
+    const before = content.substring(0, start);
+    const after = content.substring(end);
+    const newContent = before + text + after;
+    handleContentChange(newContent);
+
+    // Place cursor after inserted text (for code blocks, inside the block)
+    requestAnimationFrame(() => {
+      if (textarea) {
+        let cursorPos = start + text.length;
+        // For code blocks, place cursor between the backticks
+        if (text === "```\n\n```") {
+          cursorPos = start + 4;
+        } else if (text === "$$\n\n$$") {
+          cursorPos = start + 3;
+        }
+        textarea.selectionStart = textarea.selectionEnd = cursorPos;
+        textarea.focus();
+      }
+    });
+
+    setSlashOpen(false);
+    slashStartRef.current = -1;
+  }, [content]);
+
+  const handleSlashSelect = useCallback((command: SlashCommandItem) => {
+    if (command.action === "image") {
+      // Close slash menu first, clear the slash text
+      const textarea = textareaRef.current;
+      if (textarea && slashStartRef.current >= 0) {
+        const before = content.substring(0, slashStartRef.current);
+        const after = content.substring(textarea.selectionStart);
+        handleContentChange(before + after);
+      }
+      setSlashOpen(false);
+      slashStartRef.current = -1;
+      setImageModalOpen(true);
+    } else if (command.action === "page-embed") {
+      const textarea = textareaRef.current;
+      if (textarea && slashStartRef.current >= 0) {
+        const before = content.substring(0, slashStartRef.current);
+        const after = content.substring(textarea.selectionStart);
+        handleContentChange(before + after);
+      }
+      setSlashOpen(false);
+      slashStartRef.current = -1;
+      setPagePickerOpen(true);
+    } else if (command.insert) {
+      insertTextAtCursor(command.insert);
+    }
+  }, [content, insertTextAtCursor]);
+
+  const handleModalInsert = useCallback((markdown: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const pos = textarea.selectionStart;
+    const before = content.substring(0, pos);
+    const after = content.substring(pos);
+    const newContent = before + markdown + after;
+    handleContentChange(newContent);
+
+    setImageModalOpen(false);
+    setPagePickerOpen(false);
+
+    requestAnimationFrame(() => {
+      if (textarea) {
+        const cursorPos = pos + markdown.length;
+        textarea.selectionStart = textarea.selectionEnd = cursorPos;
+        textarea.focus();
+      }
+    });
+  }, [content]);
+
+  // ── Key handlers ─────────────────────────────────────────────────
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Tab inserts spaces
     if (e.key === "Tab") {
       e.preventDefault();
       const textarea = textareaRef.current;
@@ -146,6 +325,13 @@ export function PageEditor({
       requestAnimationFrame(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2;
       });
+    }
+
+    // Escape closes slash menu
+    if (e.key === "Escape" && slashOpen) {
+      e.preventDefault();
+      setSlashOpen(false);
+      slashStartRef.current = -1;
     }
   };
 
@@ -190,6 +376,13 @@ export function PageEditor({
               </>
             )}
           </div>
+
+          {/* Slash hint */}
+          {mode === "edit" && (
+            <span className="text-[10px] text-content-faint mr-1">
+              Type <kbd className="px-1 py-0.5 bg-content-tertiary rounded text-content-muted">/</kbd> to insert
+            </span>
+          )}
 
           {/* Mode toggle */}
           <div className="flex items-center border border-content-border rounded overflow-hidden">
@@ -291,16 +484,31 @@ export function PageEditor({
 
           {/* Content */}
           {mode === "edit" ? (
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              onKeyDown={handleTabKey}
-              placeholder="Start writing... Use **bold**, *italic*, [[Wiki Links]], and Markdown."
-              className="w-full min-h-[400px] pb-16 text-sm leading-relaxed text-content-text bg-transparent resize-none outline-none placeholder-content-faint font-mono"
-              spellCheck={false}
-              style={{ minHeight: "calc(100vh - 300px)" }}
-            />
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleTextareaInput}
+                onKeyDown={handleKeyDown}
+                placeholder='Start writing... Type "/" to insert blocks, [[Page Name]] for wiki-links.'
+                className="w-full min-h-[400px] pb-16 text-sm leading-relaxed text-content-text bg-transparent resize-none outline-none placeholder-content-faint font-mono"
+                spellCheck={false}
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              />
+
+              {/* Slash command menu */}
+              {slashOpen && (
+                <SlashCommandMenu
+                  query={slashQuery}
+                  position={slashPos}
+                  onSelect={handleSlashSelect}
+                  onClose={() => {
+                    setSlashOpen(false);
+                    slashStartRef.current = -1;
+                  }}
+                />
+              )}
+            </div>
           ) : (
             <div className="pb-16">
               {content ? (
@@ -317,6 +525,21 @@ export function PageEditor({
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      {imageModalOpen && (
+        <ImageUploadModal
+          onInsert={handleModalInsert}
+          onClose={() => setImageModalOpen(false)}
+        />
+      )}
+      {pagePickerOpen && (
+        <PagePickerModal
+          currentPageId={page.id}
+          onInsert={handleModalInsert}
+          onClose={() => setPagePickerOpen(false)}
+        />
+      )}
     </div>
   );
 }
