@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import type { TableDef, TableRow, TableColumn, TableTemplate } from "../../types";
 import {
   getTable,
@@ -253,16 +255,7 @@ export function TableView({ tableName, onOpenTable }: TableViewProps) {
             onClick={() => onOpenTable("")}
             className="p-1 rounded hover:bg-content-tertiary transition-colors text-content-muted"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M12 4l-6 6 6 6" />
-            </svg>
+            <FontAwesomeIcon icon={faChevronLeft} />
           </button>
           <div>
             <h1 className="text-xl font-bold text-content-text">{table.name}</h1>

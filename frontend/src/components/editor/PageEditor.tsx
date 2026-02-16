@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import type { Page, PageUpdate } from "../../types";
 import { getPage, updatePage, deletePage } from "../../api/pages";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -157,9 +159,7 @@ export function PageEditor({
             className="p-1 rounded hover:bg-content-tertiary transition-colors text-content-muted hover:text-content-text"
             title="Back"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M10 3l-5 5 5 5" />
-            </svg>
+            <FontAwesomeIcon icon={faChevronLeft} size="sm" />
           </button>
           <span className="text-xs text-content-faint">{page.workspace}</span>
           <span className="text-xs text-content-faint">/</span>

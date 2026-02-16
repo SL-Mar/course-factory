@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import type { SearchResult, Page } from "../../types";
 import { searchPages, getRecentPages } from "../../api/pages";
 
@@ -156,17 +158,7 @@ export function SearchModal({
       <div className="w-full max-w-xl bg-content-secondary rounded-xl shadow-2xl border border-content-border overflow-hidden animate-fade-in">
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-content-border">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="#5a5a5a"
-            strokeWidth="2"
-          >
-            <circle cx="9" cy="9" r="6" />
-            <path d="M14 14l4 4" />
-          </svg>
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="text-content-faint" />
           <input
             ref={inputRef}
             type="text"

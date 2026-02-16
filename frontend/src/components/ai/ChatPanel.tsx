@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "../../types";
 import { sendChatMessage } from "../../api/ai";
 import { MarkdownRenderer } from "../editor/MarkdownRenderer";
@@ -214,16 +216,7 @@ export function ChatPanel({
             disabled={!input.trim() || loading}
             className="px-4 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M14 2L2 8l4 2m8-8l-6 12-2-4m8-8l-8 8" />
-            </svg>
+            <FontAwesomeIcon icon={faPaperPlane} size="sm" />
           </button>
         </div>
       </div>

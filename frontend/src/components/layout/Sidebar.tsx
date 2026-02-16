@@ -1,4 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChevronRight,
+  faChevronLeft,
+  faMagnifyingGlass,
+  faHouse,
+  faFile,
+  faDiagramProject,
+  faComments,
+  faGear,
+  faTrashCan,
+  faTable,
+  faPlus,
+  faStar,
+  faDownload,
+  faFilePdf,
+  faGripVertical,
+} from "@fortawesome/free-solid-svg-icons";
 import type { View, Page, TableDef, WorkspaceMeta } from "../../types";
 import {
   getRecentPages,
@@ -36,101 +54,8 @@ interface SectionState {
   [key: string]: boolean;
 }
 
-/* ── Small inline SVG icons ── */
-
-const IconChevronRight = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M6 3l5 5-5 5" />
-  </svg>
-);
-const IconChevronLeft = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M10 3l-5 5 5 5" />
-  </svg>
-);
-const IconSearch = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="7" cy="7" r="4.5" />
-    <path d="M10.5 10.5L14 14" />
-  </svg>
-);
-const IconHome = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M2 8l6-6 6 6M4 7v6a1 1 0 001 1h2v-3h2v3h2a1 1 0 001-1V7" />
-  </svg>
-);
-const IconFile = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" />
-    <path d="M9 2v4h4" />
-  </svg>
-);
-const IconGraph = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="4" cy="4" r="2" />
-    <circle cx="12" cy="4" r="2" />
-    <circle cx="8" cy="12" r="2" />
-    <path d="M5.5 5.5L7 10.5M10.5 5.5L9 10.5" />
-  </svg>
-);
-const IconChat = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M2 3h12v8H5l-3 3V3z" strokeLinejoin="round" />
-  </svg>
-);
-const IconGear = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="8" cy="8" r="2.5" />
-    <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" />
-  </svg>
-);
-const IconTrash = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M3 4h10l-1 10H4L3 4zM6 4V2.5h4V4M2 4h12" />
-  </svg>
-);
-const IconTable = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="2" y="2" width="12" height="12" rx="1" />
-    <path d="M2 6h12M2 10h12M6 2v12" />
-  </svg>
-);
-const IconPlus = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M6 2v8M2 6h8" />
-  </svg>
-);
-const IconStar = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M8 2l1.8 3.6L14 6.2l-3 2.9.7 4.1L8 11.2 4.3 13.2l.7-4.1-3-2.9 4.2-.6L8 2z" />
-  </svg>
-);
-const IconDownload = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M6 2v6M3 6l3 3 3-3M2 10h8" />
-  </svg>
-);
-const IconPdf = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="2" y="1" width="8" height="10" rx="1" />
-    <path d="M4 4h4M4 6h4M4 8h2" />
-  </svg>
-);
-const IconTrashSmall = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M2 3h8l-.75 7.5H2.75L2 3zM4.5 3V1.5h3V3M1.5 3h9" />
-  </svg>
-);
-const IconGrip = () => (
-  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
-    <circle cx="3" cy="3" r="1.2" />
-    <circle cx="7" cy="3" r="1.2" />
-    <circle cx="3" cy="7" r="1.2" />
-    <circle cx="7" cy="7" r="1.2" />
-    <circle cx="3" cy="11" r="1.2" />
-    <circle cx="7" cy="11" r="1.2" />
-  </svg>
-);
+/* ── Icon shorthand ── */
+const Fa = FontAwesomeIcon;
 
 export function Sidebar({
   currentView,
@@ -451,9 +376,9 @@ export function Sidebar({
           onClick={() => onOpenPage(page)}
         >
           <span className="shrink-0 opacity-30 cursor-grab">
-            <IconGrip />
+            <Fa icon={faGripVertical} size="xs" />
           </span>
-          <span className="shrink-0 opacity-50"><IconFile /></span>
+          <span className="shrink-0 opacity-50"><Fa icon={faFile} size="xs" /></span>
           <span className="truncate flex-1">{page.title}</span>
           {/* Hover-reveal action icons */}
           <span className="hidden group-hover/page:flex items-center gap-0.5 shrink-0">
@@ -462,21 +387,21 @@ export function Sidebar({
               className="w-5 h-5 flex items-center justify-center rounded text-sidebar-muted/50 hover:text-accent-light hover:bg-sidebar-active transition-colors"
               title="Export MD"
             >
-              <IconDownload />
+              <Fa icon={faDownload} size="xs" />
             </button>
             <button
               onClick={(e) => handleExportPdf(page.id, page.title, e)}
               className="w-5 h-5 flex items-center justify-center rounded text-sidebar-muted/50 hover:text-accent-light hover:bg-sidebar-active transition-colors"
               title="Export PDF"
             >
-              <IconPdf />
+              <Fa icon={faFilePdf} size="xs" />
             </button>
             <button
               onClick={(e) => handleTrashPage(page, e)}
               className="w-5 h-5 flex items-center justify-center rounded text-sidebar-muted/50 hover:text-red-400 hover:bg-sidebar-active transition-colors"
               title="Delete"
             >
-              <IconTrashSmall />
+              <Fa icon={faTrashCan} size="xs" />
             </button>
           </span>
         </div>
@@ -492,28 +417,28 @@ export function Sidebar({
           className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors mb-2"
           title="Expand sidebar"
         >
-          <IconChevronRight />
+          <Fa icon={faChevronRight} size="xs" />
         </button>
         <button onClick={onOpenSearch} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Search">
-          <IconSearch />
+          <Fa icon={faMagnifyingGlass} size="xs" />
         </button>
         <button onClick={() => onNavigate("home")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Home">
-          <IconHome />
+          <Fa icon={faHouse} size="xs" />
         </button>
         <button onClick={() => onNavigate("pages")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Pages">
-          <IconFile />
+          <Fa icon={faFile} size="xs" />
         </button>
         <button onClick={() => onNavigate("tables")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Tables">
-          <IconTable />
+          <Fa icon={faTable} size="xs" />
         </button>
         <button onClick={() => onNavigate("graph")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Graph">
-          <IconGraph />
+          <Fa icon={faDiagramProject} size="xs" />
         </button>
         <button onClick={() => onNavigate("ai-chat")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="AI Chat">
-          <IconChat />
+          <Fa icon={faComments} size="xs" />
         </button>
         <button onClick={() => onNavigate("engines")} className="w-7 h-7 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors" title="Engines">
-          <IconGear />
+          <Fa icon={faGear} size="xs" />
         </button>
       </div>
     );
@@ -541,7 +466,7 @@ export function Sidebar({
           className="w-6 h-6 flex items-center justify-center rounded text-sidebar-muted hover:bg-sidebar-hover hover:text-white transition-colors"
           title="Collapse sidebar"
         >
-          <IconChevronLeft />
+          <Fa icon={faChevronLeft} size="xs" />
         </button>
       </div>
 
@@ -551,7 +476,7 @@ export function Sidebar({
           onClick={onOpenSearch}
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[13px] text-sidebar-muted hover:bg-sidebar-hover transition-colors"
         >
-          <IconSearch />
+          <Fa icon={faMagnifyingGlass} size="xs" />
           <span className="flex-1 text-left">Search</span>
           <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-hover text-sidebar-muted/60 font-mono">
             {"\u2318"}K
@@ -562,12 +487,12 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto sidebar-scroll px-2 pb-3">
         <div className="space-y-0.5">
-          {navItem("Home", <IconHome />, "home")}
-          {navItem("All Pages", <IconFile />, "pages")}
-          {navItem("Graph View", <IconGraph />, "graph")}
-          {navItem("AI Chat", <IconChat />, "ai-chat")}
-          {navItem("Engines", <IconGear />, "engines")}
-          {navItem("Trash", <IconTrash />, "trash")}
+          {navItem("Home", <Fa icon={faHouse} size="xs" />, "home")}
+          {navItem("All Pages", <Fa icon={faFile} size="xs" />, "pages")}
+          {navItem("Graph View", <Fa icon={faDiagramProject} size="xs" />, "graph")}
+          {navItem("AI Chat", <Fa icon={faComments} size="xs" />, "ai-chat")}
+          {navItem("Engines", <Fa icon={faGear} size="xs" />, "engines")}
+          {navItem("Trash", <Fa icon={faTrashCan} size="xs" />, "trash")}
         </div>
 
         {/* Favorites */}
@@ -582,7 +507,7 @@ export function Sidebar({
                     onClick={() => onOpenPage(page)}
                     className="w-full flex items-center gap-2 px-3 py-1 rounded text-[13px] text-sidebar-muted hover:bg-sidebar-hover hover:text-gray-200 transition-colors"
                   >
-                    <span className="shrink-0 opacity-50"><IconStar /></span>
+                    <span className="shrink-0 opacity-50"><Fa icon={faStar} size="xs" /></span>
                     <span className="truncate">{page.title}</span>
                   </button>
                 ))}
@@ -632,7 +557,7 @@ export function Sidebar({
                   className="w-5 h-5 flex items-center justify-center rounded text-sidebar-muted/40 hover:text-white hover:bg-sidebar-hover transition-colors opacity-0 group-hover:opacity-100"
                   title="New page"
                 >
-                  <IconPlus />
+                  <Fa icon={faPlus} size="xs" />
                 </button>
               </div>
               {isOpen && (
@@ -669,7 +594,7 @@ export function Sidebar({
                 onClick={() => onOpenTable(table.name)}
                 className="w-full flex items-center gap-2 px-3 py-1 rounded text-[13px] text-sidebar-muted hover:bg-sidebar-hover hover:text-gray-200 transition-colors"
               >
-                <span className="shrink-0 opacity-50"><IconTable /></span>
+                <span className="shrink-0 opacity-50"><Fa icon={faTable} size="xs" /></span>
                 <span className="truncate">{table.name}</span>
                 <span className="ml-auto text-[10px] opacity-40">
                   {table.row_count}
@@ -680,7 +605,7 @@ export function Sidebar({
               onClick={() => onNavigate("tables")}
               className="w-full flex items-center gap-2 px-3 py-1 rounded text-[13px] text-sidebar-muted/40 hover:bg-sidebar-hover hover:text-gray-300 transition-colors"
             >
-              <span className="shrink-0"><IconPlus /></span>
+              <span className="shrink-0"><Fa icon={faPlus} size="xs" /></span>
               <span>New Table</span>
             </button>
           </div>
@@ -696,7 +621,7 @@ export function Sidebar({
                 onClick={() => onOpenPage(page)}
                 className="w-full flex items-center gap-2 px-3 py-1 rounded text-[13px] text-sidebar-muted hover:bg-sidebar-hover hover:text-gray-200 transition-colors"
               >
-                <span className="shrink-0 opacity-50"><IconFile /></span>
+                <span className="shrink-0 opacity-50"><Fa icon={faFile} size="xs" /></span>
                 <span className="truncate">{page.title}</span>
               </button>
             ))}
