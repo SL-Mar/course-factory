@@ -31,6 +31,7 @@ class PageUpdateRequest(BaseModel):
     cover: Optional[str] = None
     is_favorite: Optional[bool] = None
     is_trashed: Optional[bool] = None
+    sort_order: Optional[int] = None
 
 class PageResponse(BaseModel):
     id: str
@@ -49,10 +50,32 @@ class PageResponse(BaseModel):
     cover: str = ""
     is_favorite: bool = False
     is_trashed: bool = False
+    sort_order: int = 0
 
 class PageListResponse(BaseModel):
     pages: list[dict[str, Any]]
     total: int = 0
+
+
+# -- Workspace Meta ----------------------------------------------------------
+
+class WorkspaceMetaRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    icon: str = Field(default="", max_length=8)
+    color: str = Field(default="#2383e2", max_length=100)
+    sort_order: int = 0
+
+class WorkspaceMetaResponse(BaseModel):
+    name: str
+    icon: str = ""
+    color: str = "#2383e2"
+    sort_order: int = 0
+    page_count: int = 0
+
+
+class ReorderRequest(BaseModel):
+    page_ids: list[str] = Field(..., min_length=1, max_length=500)
+    workspace: Optional[str] = None
 
 
 # -- Search ------------------------------------------------------------------

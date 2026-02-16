@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 import ulid as ulid_lib
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
 
 from localnotion.api.deps import get_store, get_index, get_vector
 from localnotion.api.schemas import (
@@ -17,6 +18,9 @@ from localnotion.api.schemas import (
     PageListResponse,
     SearchRequest,
     SearchResultResponse,
+    WorkspaceMetaRequest,
+    WorkspaceMetaResponse,
+    ReorderRequest,
 )
 from localnotion.core.models import Page
 
@@ -44,6 +48,7 @@ def _page_response(page: Page) -> PageResponse:
         cover=page.cover,
         is_favorite=page.is_favorite,
         is_trashed=page.is_deleted,
+        sort_order=page.sort_order,
     )
 
 
@@ -101,6 +106,104 @@ async def recent_pages(limit: int = Query(default=20, ge=1, le=100)) -> PageList
 @router.get("/workspaces")
 async def list_workspaces() -> list[str]:
     return get_index().get_workspaces()
+
+
+@router.get("/workspaces/meta")
+async def list_workspace_meta() -> list[WorkspaceMetaResponse]:
+    index = get_index()
+    meta_rows = index.list_workspace_meta()
+    meta_map = {m["name"]: m for m in meta_rows}
+
+    # Build response with page counts from all known workspaces
+    workspaces = index.get_workspaces()
+    result: list[WorkspaceMetaResponse] = []
+    seen: set[str] = set()
+
+    # First: workspaces with metadata (in sort order)
+    for m in meta_rows:
+        count = index.count_pages(workspace=m["name"])
+        result.append(WorkspaceMetaResponse(
+            name=m["name"],
+            icon=m["icon"],
+            color=m["color"],
+            sort_order=m["sort_order"],
+            page_count=count,
+        ))
+        seen.add(m["name"])
+
+    # Then: workspaces without metadata (alphabetical)
+    for ws in sorted(workspaces):
+        if ws not in seen:
+            count = index.count_pages(workspace=ws)
+            result.append(WorkspaceMetaResponse(
+                name=ws,
+                page_count=count,
+            ))
+
+    return result
+
+
+@router.post("/workspaces/meta")
+async def upsert_workspace_meta(req: WorkspaceMetaRequest) -> WorkspaceMetaResponse:
+    index = get_index()
+    index.upsert_workspace_meta(
+        name=req.name,
+        icon=req.icon,
+        color=req.color,
+        sort_order=req.sort_order,
+    )
+    count = index.count_pages(workspace=req.name)
+    return WorkspaceMetaResponse(
+        name=req.name,
+        icon=req.icon,
+        color=req.color,
+        sort_order=req.sort_order,
+        page_count=count,
+    )
+
+
+@router.post("/reorder")
+async def reorder_pages(req: ReorderRequest) -> dict:
+    """Batch-update sort_order for a list of page IDs.
+
+    If workspace is provided, also moves all pages to that workspace.
+    """
+    index = get_index()
+    store = get_store()
+    updated = index.batch_reorder(req.page_ids, workspace=req.workspace)
+
+    # Also update workspace in the .md files if moving between workspaces
+    if req.workspace is not None:
+        for pid in req.page_ids:
+            try:
+                page = store.load(pid)
+                if page.workspace != req.workspace:
+                    page.workspace = req.workspace
+                    store.save(page)
+            except FileNotFoundError:
+                continue
+
+    return {"ok": True, "updated": updated}
+
+
+@router.get("/{page_id}/export/pdf")
+async def export_page_pdf(page_id: str) -> Response:
+    store = get_store()
+    try:
+        page = store.load(page_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Page not found")
+
+    from localnotion.core.pdf import convert_to_pdf
+    pdf_bytes = convert_to_pdf(page.title, page.content)
+    safe_title = "".join(c for c in page.title if c.isalnum() or c in " -_").strip()[:80]
+    filename = f"{safe_title or 'page'}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{page_id}")

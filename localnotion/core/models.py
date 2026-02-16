@@ -28,6 +28,7 @@ class Page(BaseModel):
     icon: str = Field(default="", max_length=8)
     cover: str = Field(default="", max_length=500, description="CSS gradient or image URL")
     is_favorite: bool = False
+    sort_order: int = Field(default=0, ge=0)
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -59,6 +60,7 @@ class PageSummary(BaseModel):
     is_favorite: bool = False
     is_deleted: bool = False
     word_count: int = 0
+    sort_order: int = 0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     modified_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

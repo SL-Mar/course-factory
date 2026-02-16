@@ -12,6 +12,7 @@ export interface Page {
   icon: string | null;
   cover: string | null;
   word_count?: number;
+  sort_order: number;
   created_at: string;
   updated_at: string;
   children?: Page[];
@@ -37,6 +38,7 @@ export interface PageUpdate {
   is_trashed?: boolean;
   icon?: string | null;
   cover?: string | null;
+  sort_order?: number;
 }
 
 export interface PageListResponse {
@@ -183,9 +185,20 @@ export interface ImportResult {
   errors: string[];
 }
 
+/* ── Workspace Meta ── */
+
+export interface WorkspaceMeta {
+  name: string;
+  icon: string;
+  color: string;
+  sort_order: number;
+  page_count: number;
+}
+
 /* ── App State ── */
 
 export type View =
+  | "home"
   | "pages"
   | "page-editor"
   | "tables"

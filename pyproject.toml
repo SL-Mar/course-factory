@@ -40,6 +40,8 @@ dependencies = [
     "jinja2>=3.0",
     "python-ulid>=2.0.0",
     "python-frontmatter>=1.0.0",
+    "markdown>=3.5",
+    "fpdf2>=2.7",
 ]
 
 [project.optional-dependencies]

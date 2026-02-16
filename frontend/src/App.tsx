@@ -7,6 +7,7 @@ import { GraphView } from "./components/graph/GraphView";
 import { ChatPanel } from "./components/ai/ChatPanel";
 import { SearchModal } from "./components/search/SearchModal";
 import { EnginePanel } from "./components/engines/EnginePanel";
+import { HomeView } from "./components/home/HomeView";
 import { useApp } from "./hooks/useApp";
 import type { Page, View } from "./types";
 import { searchPages } from "./api/pages";
@@ -84,8 +85,20 @@ export default function App() {
     [navigate],
   );
 
+  const handleSelectWorkspace = useCallback((workspace: string) => {
+    setWorkspace(workspace);
+  }, [setWorkspace]);
+
   const renderContent = () => {
     switch (state.view) {
+      case "home":
+        return (
+          <HomeView
+            onSelectWorkspace={handleSelectWorkspace}
+            onNavigate={navigate}
+          />
+        );
+
       case "pages":
         return (
           <PageList

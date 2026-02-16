@@ -11,7 +11,7 @@ type Action =
   | { type: "CLOSE_SEARCH" };
 
 const initialState: AppState = {
-  view: "pages",
+  view: "home",
   activePage: null,
   activeTable: null,
   activeWorkspace: "default",
@@ -54,7 +54,7 @@ export function useApp() {
 
   const closePage = useCallback(() => {
     dispatch({ type: "SET_ACTIVE_PAGE", page: null });
-    dispatch({ type: "SET_VIEW", view: "pages" });
+    dispatch({ type: "SET_VIEW", view: "home" });
   }, []);
 
   const openTable = useCallback((name: string) => {

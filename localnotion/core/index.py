@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS page_index (
     is_deleted INTEGER DEFAULT 0,
     icon TEXT DEFAULT '',
     cover TEXT DEFAULT '',
-    is_favorite INTEGER DEFAULT 0
+    is_favorite INTEGER DEFAULT 0,
+    sort_order INTEGER DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_page_workspace ON page_index(workspace);
@@ -68,6 +69,13 @@ CREATE TABLE IF NOT EXISTS table_registry (
     db_path TEXT NOT NULL,
     created_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS workspace_meta (
+    name TEXT PRIMARY KEY,
+    icon TEXT DEFAULT '',
+    color TEXT DEFAULT '#2383e2',
+    sort_order INTEGER DEFAULT 0
+);
 """
 
 
@@ -88,6 +96,12 @@ class PageIndex:
             self._conn.commit()
         except sqlite3.OperationalError:
             pass  # Column already exists
+        # Migrate: add sort_order column if missing (existing DBs)
+        try:
+            self._conn.execute("ALTER TABLE page_index ADD COLUMN sort_order INTEGER DEFAULT 0")
+            self._conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
     def close(self) -> None:
         self._conn.close()
@@ -101,8 +115,8 @@ class PageIndex:
         self._conn.execute(
             """INSERT OR REPLACE INTO page_index
                (id, title, parent_id, type, status, tags, links, workspace,
-                created_at, modified_at, word_count, is_deleted, icon, cover, is_favorite)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                created_at, modified_at, word_count, is_deleted, icon, cover, is_favorite, sort_order)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 page.id,
                 page.title,
@@ -119,6 +133,7 @@ class PageIndex:
                 page.icon,
                 page.cover,
                 int(page.is_favorite),
+                page.sort_order,
             ),
         )
         self._rebuild_backlinks(page)
@@ -179,7 +194,7 @@ class PageIndex:
             clauses.append("is_favorite = 1")
 
         where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
-        sql = f"SELECT * FROM page_index{where} ORDER BY modified_at DESC LIMIT ? OFFSET ?"
+        sql = f"SELECT * FROM page_index{where} ORDER BY sort_order ASC, modified_at DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 
         rows = self._conn.execute(sql, params).fetchall()
@@ -251,6 +266,28 @@ class PageIndex:
                 "SELECT COUNT(*) AS c FROM page_index WHERE is_deleted = 0"
             ).fetchone()
         return row["c"] if row else 0
+
+    def batch_reorder(self, page_ids: list[str], workspace: str | None = None) -> int:
+        """Set sort_order for a list of page IDs based on their position in the list.
+
+        If workspace is provided, also moves all pages to that workspace.
+        Returns the number of pages updated.
+        """
+        updated = 0
+        for idx, pid in enumerate(page_ids):
+            if workspace is not None:
+                self._conn.execute(
+                    "UPDATE page_index SET sort_order = ?, workspace = ? WHERE id = ?",
+                    (idx, workspace, pid),
+                )
+            else:
+                self._conn.execute(
+                    "UPDATE page_index SET sort_order = ? WHERE id = ?",
+                    (idx, pid),
+                )
+            updated += 1
+        self._conn.commit()
+        return updated
 
     # ------------------------------------------------------------------
     # Rebuild
@@ -329,6 +366,27 @@ class PageIndex:
         return dict(row) if row else None
 
     # ------------------------------------------------------------------
+    # Workspace metadata
+    # ------------------------------------------------------------------
+
+    def upsert_workspace_meta(self, name: str, icon: str = "", color: str = "#2383e2", sort_order: int = 0) -> None:
+        self._conn.execute(
+            "INSERT OR REPLACE INTO workspace_meta (name, icon, color, sort_order) VALUES (?,?,?,?)",
+            (name, icon, color, sort_order),
+        )
+        self._conn.commit()
+
+    def list_workspace_meta(self) -> list[dict]:
+        rows = self._conn.execute(
+            "SELECT * FROM workspace_meta ORDER BY sort_order, name"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_workspace_meta(self, name: str) -> None:
+        self._conn.execute("DELETE FROM workspace_meta WHERE name = ?", (name,))
+        self._conn.commit()
+
+    # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
@@ -349,6 +407,7 @@ class PageIndex:
             is_favorite=bool(row["is_favorite"]),
             is_deleted=bool(row["is_deleted"]),
             word_count=row["word_count"],
+            sort_order=row["sort_order"] if "sort_order" in row.keys() else 0,
             created_at=datetime.fromisoformat(row["created_at"]),
             modified_at=datetime.fromisoformat(row["modified_at"]),
         )
