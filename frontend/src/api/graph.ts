@@ -1,8 +1,9 @@
 import { apiFetch } from "./client";
 import type { GraphData, Backlink } from "../types";
 
-export async function getFullGraph(): Promise<GraphData> {
-  return apiFetch<GraphData>("/graph");
+export async function getFullGraph(workspace?: string): Promise<GraphData> {
+  const qs = workspace ? `?workspace=${encodeURIComponent(workspace)}` : "";
+  return apiFetch<GraphData>(`/graph${qs}`);
 }
 
 export async function getBacklinks(pageId: string): Promise<Backlink[]> {

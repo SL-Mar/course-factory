@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
 import type { GraphData, GraphNode, GraphLink } from "../../types";
 import { getFullGraph, getNeighborhood } from "../../api/graph";
+import { getWorkspaces } from "../../api/pages";
 
 interface GraphViewProps {
   focusPageId?: string;
@@ -29,13 +30,19 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [nodeCount, setNodeCount] = useState(0);
   const [linkCount, setLinkCount] = useState(0);
+  const [workspaces, setWorkspaces] = useState<string[]>([]);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
+
+  useEffect(() => {
+    getWorkspaces().then(setWorkspaces).catch(() => {});
+  }, []);
 
   const loadGraph = useCallback(async () => {
     setLoading(true);
     try {
       const data = focusPageId
         ? await getNeighborhood(focusPageId)
-        : await getFullGraph();
+        : await getFullGraph(selectedWorkspace || undefined);
       setGraphData(data);
       setNodeCount(data.nodes.length);
       setLinkCount(data.links.length);
@@ -44,7 +51,7 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
     } finally {
       setLoading(false);
     }
-  }, [focusPageId]);
+  }, [focusPageId, selectedWorkspace]);
 
   useEffect(() => {
     loadGraph();
@@ -264,6 +271,16 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <select
+            value={selectedWorkspace}
+            onChange={(e) => setSelectedWorkspace(e.target.value)}
+            className="px-2 py-1.5 text-xs bg-content-tertiary text-content-text border border-content-border rounded-md outline-none focus:border-accent cursor-pointer"
+          >
+            <option value="">All workspaces</option>
+            {workspaces.map((ws) => (
+              <option key={ws} value={ws}>{ws}</option>
+            ))}
+          </select>
           {focusPageId && (
             <button
               onClick={() => loadGraph()}
