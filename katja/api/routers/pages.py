@@ -23,6 +23,7 @@ from katja.api.schemas import (
     WorkspaceMetaRequest,
     WorkspaceMetaResponse,
     ReorderRequest,
+    WorkspaceReorderRequest,
 )
 from katja.core.models import Page
 
@@ -162,6 +163,14 @@ async def upsert_workspace_meta(req: WorkspaceMetaRequest) -> WorkspaceMetaRespo
         sort_order=req.sort_order,
         page_count=count,
     )
+
+
+@router.post("/workspaces/reorder")
+async def reorder_workspaces(req: WorkspaceReorderRequest) -> dict:
+    """Batch-update sort_order for workspaces based on position in list."""
+    index = get_index()
+    updated = index.batch_reorder_workspaces(req.workspace_names)
+    return {"ok": True, "updated": updated}
 
 
 @router.post("/reorder")

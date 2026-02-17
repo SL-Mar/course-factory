@@ -77,6 +77,9 @@ class ReorderRequest(BaseModel):
     page_ids: list[str] = Field(..., min_length=1, max_length=500)
     workspace: Optional[str] = None
 
+class WorkspaceReorderRequest(BaseModel):
+    workspace_names: list[str] = Field(..., min_length=1, max_length=100)
+
 
 # -- Search ------------------------------------------------------------------
 

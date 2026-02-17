@@ -83,6 +83,15 @@ export async function reorderPages(
   });
 }
 
+export async function reorderWorkspaces(
+  workspaceNames: string[],
+): Promise<void> {
+  await apiFetch<{ ok: boolean }>("/pages/workspaces/reorder", {
+    method: "POST",
+    body: JSON.stringify({ workspace_names: workspaceNames }),
+  });
+}
+
 export function exportPageMd(page: Page): void {
   const blob = new Blob([`# ${page.title}\n\n${page.content}`], {
     type: "text/markdown;charset=utf-8",

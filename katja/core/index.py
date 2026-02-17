@@ -396,6 +396,32 @@ class PageIndex:
         self._conn.execute("DELETE FROM workspace_meta WHERE name = ?", (name,))
         self._conn.commit()
 
+    def batch_reorder_workspaces(self, workspace_names: list[str]) -> int:
+        """Set sort_order for workspaces based on their position in the list.
+
+        Creates workspace_meta rows for workspaces that don't have one yet.
+        Returns the number of workspaces updated.
+        """
+        updated = 0
+        for idx, name in enumerate(workspace_names):
+            # Upsert: update sort_order if exists, insert with defaults if not
+            existing = self._conn.execute(
+                "SELECT name FROM workspace_meta WHERE name = ?", (name,)
+            ).fetchone()
+            if existing:
+                self._conn.execute(
+                    "UPDATE workspace_meta SET sort_order = ? WHERE name = ?",
+                    (idx, name),
+                )
+            else:
+                self._conn.execute(
+                    "INSERT INTO workspace_meta (name, icon, color, sort_order) VALUES (?,?,?,?)",
+                    (name, "", "#2383e2", idx),
+                )
+            updated += 1
+        self._conn.commit()
+        return updated
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
