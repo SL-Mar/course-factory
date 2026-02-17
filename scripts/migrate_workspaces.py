@@ -153,13 +153,13 @@ def classify(title: str) -> str | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Migrate pages into workspaces")
     parser.add_argument("--execute", action="store_true", help="Apply changes (default: dry-run)")
-    parser.add_argument("--data-dir", default=str(Path.home() / "localnotion"),
-                        help="LocalNotion data directory")
+    parser.add_argument("--data-dir", default=str(Path.home() / "katja"),
+                        help="Katja data directory")
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
     pages_dir = data_dir / "pages"
-    db_path = data_dir / "data" / "localnotion.db"
+    db_path = data_dir / "data" / "katja.db"
 
     if not pages_dir.is_dir():
         print(f"ERROR: Pages directory not found: {pages_dir}")

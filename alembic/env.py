@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from course_factory.db.models import Base
+from katja.db.models import Base
 
 config = context.config
 if config.config_file_name is not None:

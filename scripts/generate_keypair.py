@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an Ed25519 signing / verification keypair for Course Factory.
+"""Generate an Ed25519 signing / verification keypair for Katja.
 
 Usage::
 
@@ -39,7 +39,7 @@ except ImportError:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate an Ed25519 keypair for Course Factory licensing.",
+        description="Generate an Ed25519 keypair for Katja licensing.",
     )
     parser.add_argument(
         "--out",
@@ -91,7 +91,7 @@ def main() -> None:
     public_hex = public_bytes.hex()
 
     print("=" * 68)
-    print("  Course Factory -- Ed25519 Keypair Generated")
+    print("  Katja -- Ed25519 Keypair Generated")
     print("=" * 68)
     print()
     print(f"  Private key : {private_path}")
@@ -103,7 +103,7 @@ def main() -> None:
     print("  NEXT STEPS:")
     print()
     print("  1. Copy the public hex string above into:")
-    print("     course_factory/license/validator.py -> _PUBLIC_KEY_HEX")
+    print("     katja/license/validator.py -> _PUBLIC_KEY_HEX")
     print()
     print("  2. Keep cf.private SECRET. Do not commit it to version control.")
     print("     Add 'keys/*.private' to your .gitignore.")

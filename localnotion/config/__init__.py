@@ -1,1 +1,0 @@
-"""LocalNotion configuration."""

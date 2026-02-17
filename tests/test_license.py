@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from nacl.signing import SigningKey
 
-from course_factory.license.models import LicensePayload, PRODUCTS, TIERS
-from course_factory.license.keygen import generate_license_key
-from course_factory.license import validator as validator_mod
-from course_factory.license.validator import (
+from katja.license.models import LicensePayload, PRODUCTS, TIERS
+from katja.license.keygen import generate_license_key
+from katja.license import validator as validator_mod
+from katja.license.validator import (
     validate_key,
     InvalidKeyFormat,
     InvalidSignature,
@@ -83,11 +83,11 @@ class TestLicensePayload:
             )
 
     def test_all_products_valid(self):
-        expected = {"CF", "QC", "WM", "SK", "ST", "CS", "CWF", "UNI"}
+        expected = {"KJ", "CF", "QC", "WM", "UNI"}
         assert PRODUCTS == expected
 
     def test_all_tiers_valid(self):
-        expected = {"free", "pro", "enterprise"}
+        expected = {"free", "standard", "pro", "enterprise"}
         assert TIERS == expected
 
     def test_expired_payload(self):

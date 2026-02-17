@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "/home/slmar/projects/course-factory/localnotion/api/static",
+    outDir: "/home/slmar/projects/course-factory/katja/api/static",
     emptyOutDir: true,
   },
 });

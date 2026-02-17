@@ -3,16 +3,16 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "localnotion"
+name = "katja"
 version = "0.1.0"
-description = "Local-first knowledge operating system — your brain's OS, running on your machine"
+description = "Katja — local-first knowledge operating system"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "SL-MAR", email = "smr.laignel@gmail.com"}
 ]
-keywords = ["knowledge", "notion", "local-first", "ai", "wiki", "markdown"]
+keywords = ["knowledge", "local-first", "ai", "wiki", "markdown"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
@@ -55,16 +55,16 @@ dev = [
 ]
 
 [project.scripts]
-localnotion = "localnotion.cli:app_main"
+katja = "katja.cli:app_main"
 
 [project.urls]
-Homepage = "https://github.com/SL-Mar/course-factory"
-Repository = "https://github.com/SL-Mar/course-factory"
+Homepage = "https://github.com/SL-Mar/katja"
+Repository = "https://github.com/SL-Mar/katja"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["localnotion*"]
-exclude = ["tests*", "course_factory*"]
+include = ["katja*"]
+exclude = ["tests*"]
 
 [tool.black]
 line-length = 100
@@ -88,6 +88,6 @@ python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
 
 [tool.coverage.run]
-source = ["localnotion"]
+source = ["katja"]
 branch = true
 omit = ["*/tests/*"]

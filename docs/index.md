@@ -1,9 +1,8 @@
-# Course Factory
+# Katja
 
-**Course Factory** is an autonomous agentic system that transforms technical
-knowledge into publishable, structured courses. It ingests source material
-(papers, docs, codebases), orchestrates LLM-driven research and synthesis, and
-produces multi-format course content ready for distribution.
+**Katja** is a local-first knowledge operating system. It stores everything as
+plain markdown files with YAML frontmatter, features bidirectional wiki-links,
+semantic search via vector embeddings, an AI assistant, and a clean minimalist UI.
 
 ---
 
@@ -11,7 +10,7 @@ produces multi-format course content ready for distribution.
 
 ```bash
 pip install -e .
-cf version
+katja version
 ```
 
 You should see the installed version printed to the terminal, confirming that
@@ -21,16 +20,16 @@ the CLI is available.
 
 ```bash
 # Generate a license keypair
-cf keygen init
+katja keygen init
 
 # Create a default configuration file
-cf config init
+katja config init
 ```
 
-Once configured, launch a pipeline run with:
+Once configured, launch the server:
 
 ```bash
-cf run --topic "Your Topic Here"
+katja serve
 ```
 
 ---
@@ -39,5 +38,4 @@ cf run --topic "Your Topic Here"
 
 - [Getting Started](getting-started.md) -- full installation and first-run walkthrough
 - [Configuration](configuration.md) -- environment variables and YAML options
-- [Pipeline Stages](stages.md) -- detailed breakdown of stages 0-7
 - [API Reference](api.md) -- REST API documentation

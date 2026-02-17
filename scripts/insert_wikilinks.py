@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Insert [[wiki-links]] across all LocalNotion pages to build a knowledge graph.
+"""Insert [[wiki-links]] across all Katja pages to build a knowledge graph.
 
 Usage:
     python scripts/insert_wikilinks.py               # dry-run (default)
@@ -35,7 +35,7 @@ SKIP_TITLES = {
     "Test", "Basic", "Introduction", "Untitled", "UnTtitled",
     "Task", "Task 1", "Task 2", "Task 3",
     "Besedilo", "Frizer", "Razprava", "Slovene", "Telo", "Italian",
-    "Market View", "Welcome to LocalNotion", "Project Dashboard",
+    "Market View", "Welcome to Katja", "Project Dashboard",
     "Knowledge Base", "Meeting Notes", "Research Lab",
     "Product Roadmap", "Reading List", "Quick Reference",
 }
@@ -91,8 +91,8 @@ CONCEPT_LINKS: dict[str, list[str]] = {
     r"\bmodule\s*2\b": ["Module 2  Data Layer (Eodhd)"],
 
     # Development / products
-    r"\bcourse\s+factory\b": ["Course Factory — Technical Specification"],
-    r"\blocalnotion\b": ["Course Factory — Technical Specification"],
+    r"\bcourse\s+factory\b": ["Katja — Technical Specification"],
+    r"\bkatja\b": ["Katja — Technical Specification"],
     r"\bagentic\s+ai\b": ["Agentic Ai"],
     r"\bmarine\s+osint\b": ["Marine Osint Full Specification"],
 
@@ -158,8 +158,8 @@ WORKSPACE_RELATED: dict[str, list[str]] = {
         "Shared Lora Subspaces For Continual Learning",
     ],
     "development": [
-        "Course Factory — Technical Specification",
-        "Course Factory — Commercial Specification",
+        "Katja — Technical Specification",
+        "Katja — Commercial Specification",
         "Agentic Ai",
         "Cli First Project Template",
         "Building Your Own Virtual Software Engineer",
@@ -424,7 +424,7 @@ def get_see_also(page: dict, title_set: set[str], all_pages_by_title: dict) -> l
             "Strategy 5 — Conditional Factor Statistical Arbitrage",
             "Strategy 7 — Skewness Parity Portfolio",
             "Strategy 9 — Robust Risk Parity With Fundamentals",
-            "Course Factory — Technical Specification",
+            "Katja — Technical Specification",
         ],
         "Distance To Criticality Risk Dcr Research Paper": [
             "Dcr Editorial Strategy",
@@ -450,12 +450,12 @@ def get_see_also(page: dict, title_set: set[str], all_pages_by_title: dict) -> l
             "Autonomous Alpha Discovery Through Code Based Agentic Research  A Self Improving",
             "Distance To Criticality Risk Dcr Research Paper",
         ],
-        "Course Factory — Technical Specification": [
-            "Course Factory — Commercial Specification",
+        "Katja — Technical Specification": [
+            "Katja — Commercial Specification",
             "Cli First Project Template",
         ],
-        "Course Factory — Commercial Specification": [
-            "Course Factory — Technical Specification",
+        "Katja — Commercial Specification": [
+            "Katja — Technical Specification",
         ],
         "Maritime Legal Assistant   Project Specification": [
             "Marine Osint Full Specification",
@@ -622,8 +622,8 @@ def process_page(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Insert wiki-links to build knowledge graph")
     parser.add_argument("--execute", action="store_true", help="Apply changes (default: dry-run)")
-    parser.add_argument("--data-dir", default=str(Path.home() / "localnotion"),
-                        help="LocalNotion data directory")
+    parser.add_argument("--data-dir", default=str(Path.home() / "katja"),
+                        help="Katja data directory")
     args = parser.parse_args()
 
     pages_dir = Path(args.data_dir) / "pages"

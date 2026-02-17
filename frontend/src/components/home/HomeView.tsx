@@ -48,7 +48,7 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
       {/* Header */}
       <div className="px-8 pt-10 pb-6">
         <h1 className="text-2xl font-semibold text-content-text">
-          Welcome to LocalNotion
+          Welcome to Katja
         </h1>
         <p className="text-sm text-content-muted mt-1">
           {totalPages} pages across {workspaces.length} workspaces

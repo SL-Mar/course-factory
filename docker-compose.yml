@@ -5,11 +5,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      LN_DATA_DIR: /data
-      LN_OLLAMA_URL: http://host.docker.internal:11434
-      LN_QDRANT_URL: http://host.docker.internal:6333
-      LN_LOG_LEVEL: INFO
+      KJ_DATA_DIR: /data
+      KJ_OLLAMA_URL: http://host.docker.internal:11434
+      KJ_QDRANT_URL: http://host.docker.internal:6333
+      KJ_LOG_LEVEL: INFO
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - /home/slmar/localnotion:/data
+      - /home/slmar/katja:/data

@@ -1,11 +1,11 @@
 {
-  "name": "localnotion",
+  "name": "katja",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build --outDir ../localnotion/api/static",
+    "build": "tsc -b && vite build --outDir ../katja/api/static",
     "preview": "vite preview"
   },
   "dependencies": {

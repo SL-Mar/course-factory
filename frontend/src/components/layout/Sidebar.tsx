@@ -460,7 +460,7 @@ export function Sidebar({
       {/* Header */}
       <div className="flex items-center justify-between px-3 pt-3 pb-1">
         <span className="text-sm font-semibold text-white tracking-tight">
-          LocalNotion
+          Katja
         </span>
         <button
           onClick={onToggle}
