@@ -6,6 +6,7 @@ import { getWorkspaces } from "../../api/pages";
 
 interface GraphViewProps {
   focusPageId?: string;
+  initialWorkspace?: string;
   onOpenPage: (pageId: string, title: string) => void;
 }
 
@@ -22,7 +23,7 @@ interface SimLink extends d3.SimulationLinkDatum<SimNode> {
   target: SimNode | string;
 }
 
-export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
+export function GraphView({ focusPageId, initialWorkspace, onOpenPage }: GraphViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,12 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
   const [nodeCount, setNodeCount] = useState(0);
   const [linkCount, setLinkCount] = useState(0);
   const [workspaces, setWorkspaces] = useState<string[]>([]);
-  const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>(initialWorkspace || "");
+  const [expanded, setExpanded] = useState(false);
+  const [drifting, setDrifting] = useState(false);
+  const driftTimerRef = useRef<d3.Timer | null>(null);
+  const driftPausedRef = useRef(false);
+  const driftResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     getWorkspaces().then(setWorkspaces).catch(() => {});
@@ -65,6 +71,12 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
     const width = container.clientWidth;
     const height = container.clientHeight;
 
+    // Clear previous drift timer
+    if (driftTimerRef.current) {
+      driftTimerRef.current.stop();
+      driftTimerRef.current = null;
+    }
+
     // Clear previous
     d3.select(svgRef.current).selectAll("*").remove();
 
@@ -72,6 +84,14 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
       .select(svgRef.current)
       .attr("width", width)
       .attr("height", height);
+
+    // SVG filter for node glow
+    const defs = svg.append("defs");
+    const filter = defs.append("filter").attr("id", "node-glow");
+    filter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "blur");
+    const merge = filter.append("feMerge");
+    merge.append("feMergeNode").attr("in", "blur");
+    merge.append("feMergeNode").attr("in", "SourceGraphic");
 
     // Create container group for zoom
     const g = svg.append("g");
@@ -85,6 +105,25 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
       });
 
     svg.call(zoom);
+
+    // Pause drift on user interaction
+    const pauseDrift = () => {
+      driftPausedRef.current = true;
+      if (driftResumeTimeout.current) clearTimeout(driftResumeTimeout.current);
+    };
+    const resumeDriftDelayed = () => {
+      if (driftResumeTimeout.current) clearTimeout(driftResumeTimeout.current);
+      driftResumeTimeout.current = setTimeout(() => {
+        driftPausedRef.current = false;
+      }, 1000);
+    };
+
+    svg.on("mousedown.drift", pauseDrift);
+    svg.on("mouseup.drift", resumeDriftDelayed);
+    svg.on("wheel.drift", () => {
+      pauseDrift();
+      resumeDriftDelayed();
+    });
 
     // Prepare data
     const nodes: SimNode[] = graphData.nodes.map((n: GraphNode) => ({
@@ -105,10 +144,10 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
       }));
 
     // Color scale by workspace — muted dark-friendly palette
-    const workspaces = Array.from(new Set(nodes.map((n) => n.workspace)));
+    const wsSet = Array.from(new Set(nodes.map((n) => n.workspace)));
     const colorScale = d3
       .scaleOrdinal<string>()
-      .domain(workspaces)
+      .domain(wsSet)
       .range([
         "#7c7cf5",
         "#d06d98",
@@ -120,6 +159,11 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
         "#7db836",
       ]);
 
+    // Force parameters — doubled when expanded
+    const linkDist = expanded ? 160 : 80;
+    const chargeStr = expanded ? -400 : -200;
+    const collisionR = expanded ? 60 : 30;
+
     // Simulation
     const simulation = d3
       .forceSimulation<SimNode>(nodes)
@@ -128,23 +172,23 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
         d3
           .forceLink<SimNode, SimLink>(links)
           .id((d) => d.id)
-          .distance(80),
+          .distance(linkDist),
       )
-      .force("charge", d3.forceManyBody().strength(-200))
+      .force("charge", d3.forceManyBody().strength(chargeStr))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(30));
+      .force("collision", d3.forceCollide().radius(collisionR));
 
-    // Links
+    // Links — softer
     const link = g
       .append("g")
       .selectAll("line")
       .data(links)
       .join("line")
-      .attr("stroke", "#3a3a3a")
+      .attr("stroke", "#2a2a3a")
       .attr("stroke-width", 1)
-      .attr("stroke-opacity", 0.6);
+      .attr("stroke-opacity", 0.35);
 
-    // Nodes
+    // Nodes — with glow filter
     const node = g
       .append("g")
       .selectAll<SVGCircleElement, SimNode>("circle")
@@ -155,6 +199,7 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
       .attr("stroke", "#2e2e2e")
       .attr("stroke-width", 1.5)
       .attr("cursor", "pointer")
+      .attr("filter", "url(#node-glow)")
       .on("click", (_event, d) => {
         onOpenPage(d.id, d.title);
       })
@@ -181,6 +226,7 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
         d3
           .drag<SVGCircleElement, SimNode>()
           .on("start", (event, d) => {
+            pauseDrift();
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
@@ -190,17 +236,18 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
             d.fy = event.y;
           })
           .on("end", (event, d) => {
+            resumeDriftDelayed();
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
           }),
       );
 
-    // Labels
+    // Labels — only show for nodes with link_count >= 2
     const label = g
       .append("g")
       .selectAll<SVGTextElement, SimNode>("text")
-      .data(nodes)
+      .data(nodes.filter((n) => n.link_count >= 2))
       .join("text")
       .attr("class", "graph-label")
       .attr("text-anchor", "middle")
@@ -234,10 +281,45 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
         .attr("stroke-width", 3);
     }
 
+    // Auto-drift: slow 2D rotation around graph center
+    if (drifting) {
+      const cx = width / 2;
+      const cy = height / 2;
+      const anglePerMs = (0.15 * Math.PI) / (180 * 16.67); // ~0.15 deg per frame at 60fps
+
+      driftTimerRef.current = d3.timer(() => {
+        if (driftPausedRef.current) return;
+        const currentTransform = d3.zoomTransform(svgRef.current!);
+        const angle = anglePerMs * 16.67; // per-frame angle
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        // Rotate around the center point in screen space
+        const tx = currentTransform.x - cx;
+        const ty = currentTransform.y - cy;
+        const newTx = tx * cos - ty * sin + cx;
+        const newTy = tx * sin + ty * cos + cy;
+
+        const newTransform = d3.zoomIdentity
+          .translate(newTx, newTy)
+          .scale(currentTransform.k);
+
+        svg.call(zoom.transform, newTransform);
+      });
+    }
+
     return () => {
       simulation.stop();
+      if (driftTimerRef.current) {
+        driftTimerRef.current.stop();
+        driftTimerRef.current = null;
+      }
+      if (driftResumeTimeout.current) {
+        clearTimeout(driftResumeTimeout.current);
+        driftResumeTimeout.current = null;
+      }
     };
-  }, [graphData, focusPageId, onOpenPage]);
+  }, [graphData, focusPageId, onOpenPage, expanded, drifting]);
 
   // Handle resize
   useEffect(() => {
@@ -281,6 +363,18 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
               <option key={ws} value={ws}>{ws}</option>
             ))}
           </select>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className={`px-3 py-1.5 text-xs border rounded-md transition-colors ${expanded ? "text-accent-light border-accent/40 bg-accent/10" : "text-content-muted hover:text-content-text border-content-border hover:bg-content-tertiary"}`}
+          >
+            {expanded ? "Compact" : "Expand"}
+          </button>
+          <button
+            onClick={() => setDrifting((v) => !v)}
+            className={`px-3 py-1.5 text-xs border rounded-md transition-colors ${drifting ? "text-accent-light border-accent/40 bg-accent/10" : "text-content-muted hover:text-content-text border-content-border hover:bg-content-tertiary"}`}
+          >
+            {drifting ? "Stop" : "Drift"}
+          </button>
           {focusPageId && (
             <button
               onClick={() => loadGraph()}
@@ -348,7 +442,7 @@ export function GraphView({ focusPageId, onOpenPage }: GraphViewProps) {
           <svg
             ref={svgRef}
             className="w-full h-full"
-            style={{ background: "#191919" }}
+            style={{ background: "#121218" }}
           />
         )}
       </div>

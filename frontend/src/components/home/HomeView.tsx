@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faGripVertical } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faGripVertical, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
 import type { WorkspaceMeta, View } from "../../types";
 import { getWorkspaceMeta, createWorkspaceMeta, reorderWorkspaces } from "../../api/pages";
 import { WorkspaceIcon, ICON_KEYS } from "../shared/WorkspaceIcon";
@@ -8,6 +8,7 @@ import { WorkspaceIcon, ICON_KEYS } from "../shared/WorkspaceIcon";
 interface HomeViewProps {
   onSelectWorkspace: (workspace: string) => void;
   onNavigate: (view: View) => void;
+  onWorkspacesChanged?: () => void;
 }
 
 const DEFAULT_COLORS = [
@@ -16,7 +17,7 @@ const DEFAULT_COLORS = [
   "#65a30d", "#0d9488", "#ea580c",
 ];
 
-export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
+export function HomeView({ onSelectWorkspace, onNavigate, onWorkspacesChanged }: HomeViewProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -44,6 +45,12 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
     if (dragName) return; // don't navigate during drag
     onSelectWorkspace(ws.name);
     onNavigate("pages");
+  };
+
+  const handleOpenGraph = (e: React.MouseEvent, ws: WorkspaceMeta) => {
+    e.stopPropagation();
+    onSelectWorkspace(ws.name);
+    onNavigate("graph");
   };
 
   const handleDragStart = useCallback((e: React.DragEvent, wsName: string) => {
@@ -90,6 +97,7 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
     // Persist
     try {
       await reorderWorkspaces(newList.map(w => w.name));
+      onWorkspacesChanged?.();
     } catch (err) {
       console.error("Workspace reorder failed:", err);
       loadWorkspaces(); // rollback
@@ -102,9 +110,12 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
     <div className="h-full flex flex-col bg-content overflow-y-auto">
       {/* Header */}
       <div className="px-8 pt-10 pb-6">
-        <h1 className="text-2xl font-semibold text-content-text">
-          Welcome to Katja
-        </h1>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-semibold text-content-text">
+            Welcome to Katja <span className="text-base font-normal text-content-muted">v0.0.1</span>
+          </h1>
+          <span className="text-xs text-content-muted">Knowledge management system</span>
+        </div>
         <p className="text-sm text-content-muted mt-1">
           {totalPages} pages across {workspaces.length} workspaces
         </p>
@@ -166,6 +177,14 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
                   >
                     {ws.page_count}
                   </span>
+                  {/* Knowledge Graph button */}
+                  <button
+                    onClick={(e) => handleOpenGraph(e, ws)}
+                    className="absolute bottom-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all text-content-muted/50 hover:text-accent hover:bg-accent/10"
+                    title="Knowledge Graph"
+                  >
+                    <FontAwesomeIcon icon={faDiagramProject} size="sm" />
+                  </button>
                   {/* Bottom accent bar */}
                   <div
                     className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -194,6 +213,7 @@ export function HomeView({ onSelectWorkspace, onNavigate }: HomeViewProps) {
           onCreated={() => {
             setShowModal(false);
             loadWorkspaces();
+            onWorkspacesChanged?.();
           }}
           existingCount={workspaces.length}
         />

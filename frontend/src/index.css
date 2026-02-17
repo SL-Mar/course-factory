@@ -193,6 +193,8 @@ body {
   font-size: 11px;
   fill: #717171;
   pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
 }
 
 /* Resize handle */

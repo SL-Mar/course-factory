@@ -96,6 +96,7 @@ export default function App() {
           <HomeView
             onSelectWorkspace={handleSelectWorkspace}
             onNavigate={navigate}
+            onWorkspacesChanged={triggerRefresh}
           />
         );
 
@@ -140,6 +141,7 @@ export default function App() {
         return (
           <GraphView
             focusPageId={state.activePage?.id}
+            initialWorkspace={state.activeWorkspace}
             onOpenPage={handleGraphNodeClick}
           />
         );
