@@ -27,7 +27,6 @@ import {
   exportPageMd,
   exportPagePdf,
   reorderPages,
-  reorderWorkspaces,
 } from "../../api/pages";
 import { listTables } from "../../api/tables";
 import { WorkspaceIcon } from "../shared/WorkspaceIcon";
@@ -88,10 +87,6 @@ export function Sidebar({
   const [dropTargetWs, setDropTargetWs] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
-  // Workspace drag-and-drop state
-  const [dragWsName, setDragWsName] = useState<string | null>(null);
-  const [dropWsIndex, setDropWsIndex] = useState<number | null>(null);
-
   const handleDragStart = useCallback((e: React.DragEvent, page: Page) => {
     setDragPageId(page.id);
     setDragSourceWs(page.workspace);
@@ -117,7 +112,6 @@ export function Sidebar({
   }, []);
 
   const handleDragOverWsHeader = useCallback((e: React.DragEvent, wsName: string) => {
-    if (e.dataTransfer.types.includes("application/x-workspace")) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     setDropTargetWs(wsName);
@@ -130,7 +124,6 @@ export function Sidebar({
   }, []);
 
   const handleDrop = useCallback(async (e: React.DragEvent, targetWs: string) => {
-    if (e.dataTransfer.types.includes("application/x-workspace")) return;
     e.preventDefault();
     const pageId = e.dataTransfer.getData("text/plain");
     if (!pageId) return;
@@ -187,57 +180,6 @@ export function Sidebar({
       console.error("Reorder failed:", err);
     }
   }, [dragSourceWs, dropIndex, workspacePages]);
-
-  // Workspace drag handlers
-  const handleWsDragStart = useCallback((e: React.DragEvent, wsName: string) => {
-    e.stopPropagation();
-    setDragWsName(wsName);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("application/x-workspace", wsName);
-  }, []);
-
-  const handleWsDragEnd = useCallback(() => {
-    setDragWsName(null);
-    setDropWsIndex(null);
-  }, []);
-
-  const handleWsDragOver = useCallback((e: React.DragEvent, idx: number) => {
-    if (!e.dataTransfer.types.includes("application/x-workspace")) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    const rect = e.currentTarget.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    setDropWsIndex(e.clientY < midY ? idx : idx + 1);
-  }, []);
-
-  const handleWsDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    const wsName = e.dataTransfer.getData("application/x-workspace");
-    if (!wsName || dropWsIndex === null) return;
-
-    const currentIdx = workspaceMeta.findIndex(w => w.name === wsName);
-    if (currentIdx === -1) return;
-
-    // Compute new order
-    const newMeta = [...workspaceMeta];
-    const [moved] = newMeta.splice(currentIdx, 1);
-    const insertIdx = dropWsIndex > currentIdx ? dropWsIndex - 1 : dropWsIndex;
-    newMeta.splice(Math.max(0, insertIdx), 0, moved);
-
-    // Reset drag state
-    setDragWsName(null);
-    setDropWsIndex(null);
-
-    // Optimistic update
-    setWorkspaceMeta(newMeta);
-
-    // Persist to backend
-    try {
-      await reorderWorkspaces(newMeta.map(w => w.name));
-    } catch (err) {
-      console.error("Workspace reorder failed:", err);
-    }
-  }, [dropWsIndex, workspaceMeta]);
 
   // Load workspace metadata
   useEffect(() => {
@@ -536,7 +478,7 @@ export function Sidebar({
         )}
 
         {/* Workspace-grouped pages */}
-        {workspaceMeta.map((ws, wsIdx) => {
+        {workspaceMeta.map((ws) => {
           const wsPages = workspacePages[ws.name] || [];
           const wsKey = `ws_${ws.name}`;
           const isOpen = sections[wsKey] !== false;
@@ -546,42 +488,20 @@ export function Sidebar({
           const isDropTarget = dropTargetWs === ws.name && dragPageId !== null;
           const showDropAtEnd = isDropTarget && dropIndex === pageSlice.length && dragSourceWs !== null;
 
-          const isDraggingWs = dragWsName === ws.name;
-          const showWsDropAbove = dropWsIndex === wsIdx && dragWsName !== null && dragWsName !== ws.name;
-
           return (
             <div key={ws.name}>
-              {/* Workspace drop indicator line */}
-              {showWsDropAbove && (
-                <div className="h-0.5 mx-3 mt-2 bg-accent rounded-full" />
-              )}
               <div
-                draggable
-                onDragStart={(e) => handleWsDragStart(e, ws.name)}
-                onDragEnd={handleWsDragEnd}
-                onDragOver={(e) => {
-                  handleWsDragOver(e, wsIdx);
-                  handleDragOverWsHeader(e, ws.name);
-                }}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => {
-                  if (e.dataTransfer.types.includes("application/x-workspace")) {
-                    handleWsDrop(e);
-                  } else {
-                    handleDrop(e, ws.name);
-                  }
-                }}
-                className={`w-full flex items-center justify-between px-3 py-1 mt-3 mb-0.5 group rounded transition-colors cursor-grab active:cursor-grabbing ${
+                className={`w-full flex items-center justify-between px-3 py-1 mt-3 mb-0.5 group rounded transition-colors ${
                   isDropTarget && dragSourceWs !== ws.name ? "bg-accent/10 ring-1 ring-accent/30" : ""
-                } ${isDraggingWs ? "opacity-40" : ""}`}
+                }`}
+                onDragOver={(e) => handleDragOverWsHeader(e, ws.name)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, ws.name)}
               >
                 <button
                   onClick={() => toggleSection(wsKey)}
                   className="flex items-center gap-1.5 min-w-0"
                 >
-                  <span className="shrink-0 opacity-30 cursor-grab group-hover:opacity-60 transition-opacity">
-                    <Fa icon={faGripVertical} size="xs" />
-                  </span>
                   <span className="shrink-0 opacity-70"><WorkspaceIcon icon={ws.icon} size="xs" /></span>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted/60 group-hover:text-sidebar-muted transition-colors truncate">
                     {ws.name}
@@ -624,10 +544,6 @@ export function Sidebar({
             </div>
           );
         })}
-        {/* Workspace drop indicator at end */}
-        {dropWsIndex === workspaceMeta.length && dragWsName !== null && (
-          <div className="h-0.5 mx-3 mt-2 bg-accent rounded-full" />
-        )}
 
         {/* Tables */}
         {sectionHeader("Tables", "tables", tables.length)}
