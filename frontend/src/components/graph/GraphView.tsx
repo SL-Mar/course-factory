@@ -243,22 +243,53 @@ export function GraphView({ focusPageId, initialWorkspace, onOpenPage }: GraphVi
           }),
       );
 
-    // Labels — only show for nodes with link_count >= 2
+    // Wrap title into max 2 lines of ~16 chars each, word-aware
+    const wrapTitle = (title: string): [string, string] => {
+      const maxLine = 16;
+      if (title.length <= maxLine) return [title, ""];
+      const words = title.split(/\s+/);
+      let line1 = "";
+      let rest: string[] = [];
+      for (let i = 0; i < words.length; i++) {
+        const candidate = line1 ? line1 + " " + words[i] : words[i];
+        if (candidate.length > maxLine && line1) {
+          rest = words.slice(i);
+          break;
+        }
+        line1 = candidate;
+      }
+      if (rest.length === 0) return [line1, ""];
+      let line2 = rest.join(" ");
+      if (line2.length > maxLine) line2 = line2.substring(0, maxLine - 1) + "\u2026";
+      return [line1, line2];
+    };
+
+    // Labels — compact 2-line, opacity scaled by connectivity
     const label = g
       .append("g")
       .selectAll<SVGTextElement, SimNode>("text")
-      .data(nodes.filter((n) => n.link_count >= 2))
+      .data(nodes)
       .join("text")
       .attr("class", "graph-label")
       .attr("text-anchor", "middle")
       .attr("fill", "#9b9b9b")
-      .attr("font-size", "11px")
-      .attr("dy", (d) =>
-        Math.max(5, Math.min(15, 4 + d.link_count * 2)) + 14 + "px",
-      )
-      .text((d) =>
-        d.title.length > 20 ? d.title.substring(0, 18) + "..." : d.title,
-      );
+      .attr("font-size", "6px")
+      .attr("opacity", (d) => Math.min(1, 0.3 + d.link_count * 0.2))
+      .each(function (d) {
+        const [line1, line2] = wrapTitle(d.title);
+        const baseOffset = Math.max(5, Math.min(15, 4 + d.link_count * 2)) + 10;
+        const el = d3.select(this);
+        el.append("tspan")
+          .attr("x", 0)
+          .attr("dy", baseOffset + "px")
+          .text(line1);
+        if (line2) {
+          el.append("tspan")
+            .attr("x", 0)
+            .attr("dy", "9px")
+            .text(line2);
+        }
+      });
 
     // Tick
     simulation.on("tick", () => {
@@ -270,7 +301,15 @@ export function GraphView({ focusPageId, initialWorkspace, onOpenPage }: GraphVi
 
       node.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0);
 
-      label.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
+      label
+        .attr("x", (d) => d.x ?? 0)
+        .attr("y", (d) => d.y ?? 0)
+        .selectAll("tspan")
+        .attr("x", function () {
+          const parent = (this as SVGTSpanElement).parentNode as SVGTextElement;
+          const d = d3.select<SVGTextElement, SimNode>(parent).datum();
+          return d.x ?? 0;
+        });
     });
 
     // Highlight focused node
