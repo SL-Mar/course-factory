@@ -31,9 +31,7 @@ import {
 import { listTables } from "../../api/tables";
 import { WorkspaceIcon } from "../shared/WorkspaceIcon";
 
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 420;
-const DEFAULT_WIDTH = 224; // w-56
+const SIDEBAR_WIDTH = 420;
 
 interface SidebarProps {
   currentView: View;
@@ -81,39 +79,7 @@ export function Sidebar({
     recent: false,
   });
 
-  // Resizable sidebar
-  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
-  const isResizing = useRef(false);
-  const handleRef = useRef<HTMLDivElement>(null);
-
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    handleRef.current?.classList.add("active");
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  }, []);
-
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isResizing.current) return;
-      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, e.clientX));
-      setSidebarWidth(newWidth);
-    };
-    const onMouseUp = () => {
-      if (!isResizing.current) return;
-      isResizing.current = false;
-      handleRef.current?.classList.remove("active");
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, []);
+  // Fixed sidebar width
 
   // Drag-and-drop state
   const [dragPageId, setDragPageId] = useState<string | null>(null);
@@ -448,14 +414,8 @@ export function Sidebar({
   return (
     <div
       className="bg-sidebar flex flex-col border-r border-sidebar-border shrink-0 h-full relative"
-      style={{ width: sidebarWidth }}
+      style={{ width: SIDEBAR_WIDTH }}
     >
-      {/* Resize handle */}
-      <div
-        ref={handleRef}
-        className="resize-handle"
-        onMouseDown={onMouseDown}
-      />
 
       {/* Header */}
       <div className="flex items-center justify-between px-3 pt-3 pb-1">
